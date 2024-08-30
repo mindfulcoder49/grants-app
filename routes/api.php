@@ -10,5 +10,3 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-Route::get('/last-update', [SiteInfoController::class, 'getLastUpdate']);
-Route::post('/ai-chat', [AiAssistantController::class, 'handleRequest'])->name('ai.assistant');
