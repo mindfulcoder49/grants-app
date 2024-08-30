@@ -1,66 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AI Grants Search Tool
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project is a web application designed to help Massachusetts-based organizations search for relevant AI grants. The application leverages Laravel with Vue.js and Inertia.js to provide a seamless user experience. The tool fetches and displays grant data dynamically, allowing users to easily find funding opportunities suitable for their needs.
 
-## About Laravel
+## Table of Contents
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [File Structure](#file-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Dynamic Grant Search**: Enter your organization's description to find relevant AI grants.
+- **Detailed Grant Information**: View comprehensive details such as grant amount, eligibility, application process, and deadlines.
+- **Responsive Design**: Optimized for both desktop and mobile devices.
+- **Professional Layout**: Includes a header with navigation and a footer with contact options and social media links.
 
-## Learning Laravel
+## Technology Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Backend**: [Laravel](https://laravel.com/) (PHP framework)
+- **Frontend**: [Vue.js](https://vuejs.org/) with [Inertia.js](https://inertiajs.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Server-side Rendering**: [Inertia.js](https://inertiajs.com/)
+- **API Integration**: Axios for HTTP requests
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Follow these steps to set up the project locally:
 
-## Laravel Sponsors
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/mindfulcoder49/grants-app.git
+   cd ai-grants-search-tool
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Install Dependencies**:
+   ```bash
+   composer install
+   npm install
+   ```
 
-### Premium Partners
+3. **Set Up Environment Variables**:
+   Copy `.env.example` to `.env` and configure your environment variables, particularly database credentials.
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+4. **Run Migrations**:
+   Ensure your database is set up and configured correctly in your `.env` file, then run:
+   ```bash
+   php artisan migrate
+   ```
+
+5. **Serve the Application**:
+   ```bash
+   php artisan serve
+   npm run dev
+   ```
+
+6. **Access the Application**:
+   Open your browser and navigate to `http://localhost:8000`.
+
+## Configuration
+
+- **Backend API**: Ensure you have set up the correct API endpoint in the environment variables if fetching data from external sources.
+- **Database**: Configure your database settings in the `.env` file.
+
+## Usage
+
+- **Home Page**: Enter a brief description of your organization to search for relevant AI grants.
+- **Results Page**: View a list of grants with match percentages, amounts, deadlines, and detailed descriptions.
+- **About Page**: Learn more about the team, technology stack, and objectives of the AI Blueprint for Massachusetts.
+
+## File Structure
+
+```plaintext
+├── app/                     # Application logic
+│   ├── Http/Controllers/    # Controllers for handling requests
+│   │   └── GrantsController.php
+│   └── Models/              # Eloquent models
+├── resources/
+│   └── js/
+│       ├── Pages/           # Vue pages (Home, Results, About)
+│       └── Components/      # Vue components (Logo, LastUpdateText, GrantList)
+├── public/                  # Public assets (CSS, JS, images)
+├── routes/
+│   ├── web.php              # Web routes
+│   └── api.php              # API routes
+├── .env.example             # Environment configuration example
+├── package.json             # Node.js dependencies
+├── webpack.mix.js           # Laravel Mix configuration
+└── README.md                # Project documentation
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Contributions are welcome! Please follow these steps to contribute:
 
-## Code of Conduct
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Make your changes.
+4. Submit a pull request with a detailed explanation of your changes.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Code Style
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ensure your code follows the PSR-12 coding standard for PHP and the Vue.js style guide.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
