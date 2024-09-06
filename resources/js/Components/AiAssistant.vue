@@ -1,8 +1,8 @@
 <template>
     <div class="ai-assistant border border-atechBlue-dark max-w-[98%] rounded-lg p-4 bg-black/25 relative z-2 mx-[1%] text-lg">
-        <div ref="chatHistory" class="p-2 bg-transparent chat-history max-h-[69vh] rounded-lg overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-[#2c3e50] scrollbar-track-black">
+        <div ref="chatHistory" class="p-2 bg-atechBlue chat-history max-h-[69vh] rounded-lg overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-[#2c3e50] scrollbar-track-black">
             <div class="assistant-message text-black bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-4 mr-1 rounded-lg inline-block max-w-[95%] float-left mb-2 text-left">
-                <p>Hi! I'm the Grants AI Assistant, based on OpenAI's GPT-4o-mini model. How can I help you today?</p>
+                <p>Hi! I'm the Grants AI Assistant, based on OpenAI's GPT-4o-mini model. I can help you with the grants in your search results. Click "Add to AI Chatbot" next to a grant to add it to our conversation.</p>
             </div>
             <div v-for="(message, index) in messages" :key="index" class="message-item mb-2 clear-both">
                 <p v-if="message.role === 'user'" class="user-message tex-black bg-gradient-to-r from-atechBlue/75 to-atechBlue-dark/50 p-4 ml-2 rounded-lg inline-block max-w-[95%] float-right mb-2 text-right">
@@ -17,18 +17,34 @@
             </div>
         </div>
 
-        <div class="suggested-prompts flex flex-col gap-2 mb-4 float-right">
-            <button v-for="(prompt, index) in suggestedPrompts" :key="index" 
-                    @click="insertPrompt(prompt)" 
-                    class="bg-gradient-to-r from-atechBlue to-atechBlue-dark text-black p-2 rounded-lg cursor-pointer">
-                {{ prompt }}
-            </button>
+        <!-- Display grants and govgrants if they are not empty -->
+        <div class="grants-section mb-4">
+            <div v-if="grants != null" class="grants-list">
+                <h4 class="text-black font-bold">Grants:</h4>
+                <ul>
+                    <li v-for="(grant, index) in grants" :key="'grant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
+                        {{ grant.title }}
+                        <button @click="removeGrant(index)" class="ml-2 text-red-500">X</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div v-if="govgrants != null" class="govgrants-list mt-4">
+                <h4 class="text-black font-bold">
+                    Government Grants:</h4>
+                <ul>
+                    <li v-for="(govgrant, index) in govgrants" :key="'govgrant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
+                        {{ govgrant.opportunityTitle }}
+                        <button @click="removeGovGrant(index)" class="ml-2 text-red-500">X</button>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <form @submit.prevent="handleResponse" class="text-2xl">
             <textarea
                 v-model="form.message"
-                placeholder="Type your message..."
+                placeholder="Which grants are attached to this conversation?"
                 class="w-full p-3 rounded-lg border-none bg-gradient-to-r from-atechBlue to-atechBlue-dark tex-black text-2xl"
                 rows="2"
             ></textarea>
@@ -40,6 +56,7 @@
     </div>
 </template>
 
+
 <style scoped>
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -47,6 +64,22 @@
 .scrollbar-thumb-atechBlue {
   scrollbar-color: #2c3e50 black;
 }
+
+/* comprehensive link styling */
+
+.ai-assistant a {
+    padding-left: 1.25rem; /* equivalent to px-5 */
+    padding-right: 1.25rem; /* equivalent to px-5 */
+    margin-top: 1rem; /* equivalent to mt-4 */
+    background: linear-gradient(to top, #1f8eb9, #B8CFD6); /* equivalent to bg-gradient-to-t from-atechGreen to-atechBlue-light */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* equivalent to shadow-lg */
+    color: black; /* equivalent to text-black */
+    font-size: 1.125rem; /* equivalent to text-lg */
+    border-radius: 0.5rem; /* equivalent to rounded-lg */
+    text-decoration: none; /* Remove underline for links */
+    display: inline-block; /* Ensures padding and margin are respected */
+}
+
 </style>
 
 <script setup>
@@ -59,7 +92,7 @@ const md = markdownit({
   html: true,
   linkify: true,
   typographer: true
-})
+});
 
 md.use(markdownItLinkAttributes, {
   attrs: {
@@ -84,6 +117,20 @@ const suggestedPrompts = ref([
     "What are the best grants for startups?",
 ]);
 
+// Handle grants and govgrants props
+const props = defineProps(['grants', 'govgrants']);
+
+// Remove grant from the grants array
+const removeGrant = (index) => {
+    props.grants.splice(index, 1);
+};
+
+// Remove government grant from the govgrants array
+const removeGovGrant = (index) => {
+    props.govgrants.splice(index, 1);
+};
+
+// Scroll function
 const scrollToBottom = () => {
     nextTick(() => {
         if (chatHistory.value) {
@@ -99,6 +146,7 @@ const insertPrompt = (prompt) => {
     suggestedPrompts.value = suggestedPrompts.value.filter((item) => item !== prompt);
 };
 
+// Handle form submission
 const handleResponse = async () => {
     if (form.message.trim() === '') return;
 
@@ -110,16 +158,27 @@ const handleResponse = async () => {
 
     scrollToBottom(); // Scroll after user message is added
 
+    // Prepare body data
+    const bodyData = {
+        message: userMessage,
+        history: messages.value, // Send the entire message history
+    };
+
+    // Automatically include grants and govgrants if they are present
+    if (props.grants) {
+        bodyData.grants = props.grants;
+    }
+    if (props.govgrants.length) {
+        bodyData.govgrants = props.govgrants;
+    }
+
     const response = await fetch(route('ai.assistant'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({
-            message: userMessage,
-            history: messages.value // Send the entire message history
-        })
+        body: JSON.stringify(bodyData)
     });
 
     const reader = response.body.getReader();
@@ -141,27 +200,16 @@ const handleResponse = async () => {
     loading.value = false;
 };
 
+// Render markdown
 const renderMarkdown = (content) => {
     return md.render(content);
 };
+
 </script>
+
 
 <style>
 
-/* comprehensive link styling */
-
-.ai-assistant a {
-    padding-left: 1.25rem; /* equivalent to px-5 */
-    padding-right: 1.25rem; /* equivalent to px-5 */
-    margin-top: 1rem; /* equivalent to mt-4 */
-    background: linear-gradient(to top, #2ECC71, #B8CFD6); /* equivalent to bg-gradient-to-t from-atechGreen to-atechBlue-light */
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* equivalent to shadow-lg */
-    color: black; /* equivalent to text-black */
-    font-size: 1.125rem; /* equivalent to text-lg */
-    border-radius: 0.5rem; /* equivalent to rounded-lg */
-    text-decoration: none; /* Remove underline for links */
-    display: inline-block; /* Ensures padding and margin are respected */
-}
 
 
 

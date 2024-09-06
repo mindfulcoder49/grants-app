@@ -43,7 +43,8 @@ h1 {
 .results-container {
   display: flex;
   flex-direction: column; /* Mobile-first column layout */
-  padding: 5%;
+  /* Padding only on sides and bottom */
+  padding: 5% 5% 0;
 }
 
 @media (min-width: 768px) {

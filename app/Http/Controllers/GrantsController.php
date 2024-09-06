@@ -11,6 +11,10 @@ class GrantsController extends Controller
         // This should process the search query and fetch relevant grants from a data source.
         // For demonstration, we're using enhanced dummy data with more segmented information.
 
+        $request->validate([
+            'description' => 'string|nullable',
+        ]);
+
         $results = [
             [
                 'id' => 1,
@@ -53,6 +57,6 @@ class GrantsController extends Controller
             ],
         ];
 
-        return Inertia::render('Results', ['grants' => $results]);
+        return Inertia::render('Home', ['grants' => $results, 'searchTerm' => $request->description]);
     }
 }

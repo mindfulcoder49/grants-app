@@ -11,6 +11,7 @@ use App\Http\Controllers\SiteInfoController;
 use App\Http\Controllers\AiAssistantController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/', [GrantsController::class, 'search'])->name('search');
 Route::post('/search', [GrantsController::class, 'search'])->name('search');
 Route::get('/search', [GrantsController::class, 'search'])->name('search');
 Route::get('/about', [AboutController::class, 'index'])->name('about');

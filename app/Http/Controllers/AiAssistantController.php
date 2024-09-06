@@ -15,6 +15,8 @@ class AiAssistantController extends Controller
             $request->validate([
                 'message' => 'required|string|max:255',
                 'history' => 'array',
+                'grants' => 'array|nullable',
+                'govgrants' => 'array|nullable',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json($e->errors()["message"][0], 400);
@@ -26,10 +28,32 @@ class AiAssistantController extends Controller
         // Add the user's message to the conversation history
         $history[] = ['role' => 'user', 'content' => $userMessage];
 
+        // Check for the grants and govgrants inputs and prepend the context to the history
+        // Enforce a limit of 100,000 characters
+        if ($request->has('grants') || $request->has('govgrants')) {
+            $grants = $request->input('grants', []);
+            $govgrants = $request->input('govgrants', []);
+
+            // Stringify the grants and govgrants arrays
+            $grantContext = json_encode([
+                'grants' => $grants,
+                'govgrants' => $govgrants,
+            ]);
+
+            // Enforce the 100,000 character limit
+            if (strlen($grantContext) > 100000) {
+                $grantContext = substr($grantContext, 0, 100000) . '...';
+            }
+
+            // Prepend the grant context to the history as a system message
+            $history = array_merge([['role' => 'user', 'content' => "Here is the list of relevant grants:\n" . $grantContext]], $history);
+        }
+
         return new StreamedResponse(function() use ($history) {
             $this->streamAiResponse($history);
         });
     }
+
 
     private function streamAiResponse($history)
     {
@@ -40,7 +64,7 @@ class AiAssistantController extends Controller
         $apiKey = config('services.openai.api_key');
 
         //prepend the context to the history
-        $history = array_merge([['role' => 'user', 'content' => $this->getContext()]], $history);
+        //$history = array_merge([['role' => 'user', 'content' => $this->getContext()]], $history);
 
         $response = $client->request('POST', 'https://api.openai.com/v1/chat/completions', [
             'headers' => [
