@@ -162,3 +162,9 @@ h1 {
   color: #333;
   margin-bottom: 0.75rem; /* Spacing for consistency */
 }
+
+a, p, div {
+  word-wrap: break-word; /* For older browsers */
+  word-break: break-word; /* Break long words/links */
+  overflow-wrap: break-word; /* Modern solution */
+}

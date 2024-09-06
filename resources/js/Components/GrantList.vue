@@ -18,7 +18,7 @@
     </div>
     <!-- Add to AI Conversation Button -->
     <button @click="addToAIConversation(grant)" class="mt-4 bg-black text-white p-2 rounded-lg cursor-pointer">
-      Add to AI Conversation
+      Add to AI Chatbot
     </button>
   </div>
 </template>

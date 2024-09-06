@@ -45,7 +45,7 @@
             <textarea
                 v-model="form.message"
                 placeholder="Which grants are attached to this conversation?"
-                class="w-full p-3 rounded-lg border-none bg-gradient-to-r from-atechBlue to-atechBlue-dark tex-black text-2xl"
+                class="w-full p-3 rounded-lg border-none bg-gradient-to-r from-atechBlue to-atechBlue-dark tex-black text-l"
                 rows="2"
             ></textarea>
 
@@ -78,6 +78,10 @@
     border-radius: 0.5rem; /* equivalent to rounded-lg */
     text-decoration: none; /* Remove underline for links */
     display: inline-block; /* Ensures padding and margin are respected */
+}
+
+.send-button {
+    min-width: 100px;
 }
 
 </style>

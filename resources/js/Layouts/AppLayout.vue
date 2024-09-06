@@ -11,7 +11,7 @@
       </div>
     </header>
   
-    <main class="py-20 px-8">
+    <main class="py-20">
       <slot></slot>
     </main>
    <!--

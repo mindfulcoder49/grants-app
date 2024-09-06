@@ -54,6 +54,10 @@ export default {
       pageSize: 5, // Number of results per page
     };
   },
+  async mounted() {
+    // Fetch data from the Grants.gov API on component mount
+    await this.searchGrantsGov();
+  },
   components: {
     GrantsGovMoreInfo,
   },
@@ -75,8 +79,14 @@ export default {
   methods: {
     // For now, returns the initial search term without transformation
     getSearchTerm() {
-      return this.companyDescription;
+        // Return the company description as the initial search term, but if it's blank or contains only whitespace, put in Artificial Intelligence
+        if (this.companyDescription.trim() === '') {
+            return 'Artificial Intelligence';
+        }
+        //replace all occurences of AI case insensitive as a word with Artificial Intelligence
+        return this.companyDescription.replace(/\bAI\b/gi, 'Artificial Intelligence');
     },
+
     // Function to fetch data from the Grants.gov API
     async searchGrantsGov() {
       const payload = {
@@ -217,12 +227,9 @@ button:hover {
 }
 
 .pagination button {
-  padding: 10px;
-  margin: 0 10px;
-  background-color: #004aad;
+  min-width: 50px;
   color: white;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
 }
 
