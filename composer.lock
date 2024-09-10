@@ -4,113 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f8f003b7a2c5584c95f9b22e7842bd27",
+    "content-hash": "ef01f196d7198b2959e44e3871fe0472",
     "packages": [
-        {
-            "name": "allanpichardo/mysql-vector",
-            "version": "2.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/allanpichardo/mysql-vector.git",
-                "reference": "5481beecf77cd2772c9f8a8f3c59975e36d9267c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/allanpichardo/mysql-vector/zipball/5481beecf77cd2772c9f8a8f3c59975e36d9267c",
-                "reference": "5481beecf77cd2772c9f8a8f3c59975e36d9267c",
-                "shasum": ""
-            },
-            "require": {
-                "ankane/onnxruntime": "^0.2.1",
-                "bdelespierre/php-kmeans": "^2.2",
-                "ext-ctype": "*",
-                "ext-iconv": "*",
-                "ext-intl": "*",
-                "ext-mbstring": "*",
-                "ext-mysqli": "*",
-                "php": ">=8.0",
-                "symfony/polyfill-ctype": "^1.28",
-                "symfony/polyfill-iconv": "^1.28",
-                "symfony/polyfill-intl-normalizer": "^1.28",
-                "symfony/polyfill-mbstring": "^1.28"
-            },
-            "replace": {
-                "symfony/polyfill-ctype": "^1.28",
-                "symfony/polyfill-iconv": "^1.28",
-                "symfony/polyfill-intl-normalizer": "^1.28",
-                "symfony/polyfill-mbstring": "^1.28"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "MHz\\MysqlVector\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Allan Pichardo",
-                    "email": "allan.pichardo@gmail.com",
-                    "homepage": "https://allanpichardo.com"
-                }
-            ],
-            "description": "Perform vector operations natively on MySQL",
-            "support": {
-                "issues": "https://github.com/allanpichardo/mysql-vector/issues",
-                "source": "https://github.com/allanpichardo/mysql-vector/tree/v2.0.1"
-            },
-            "time": "2024-07-08T03:55:46+00:00"
-        },
-        {
-            "name": "ankane/onnxruntime",
-            "version": "v0.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ankane/onnxruntime-php.git",
-                "reference": "9b1414d8931756d7e892eb4fb5d2e484e1f1e600"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ankane/onnxruntime-php/zipball/9b1414d8931756d7e892eb4fb5d2e484e1f1e600",
-                "reference": "9b1414d8931756d7e892eb4fb5d2e484e1f1e600",
-                "shasum": ""
-            },
-            "require": {
-                "ext-ffi": ">= 8.1",
-                "php": ">= 8.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^10"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "OnnxRuntime\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Andrew Kane",
-                    "email": "andrew@ankane.org"
-                }
-            ],
-            "description": "Run ONNX models in PHP",
-            "support": {
-                "issues": "https://github.com/ankane/onnxruntime-php/issues",
-                "source": "https://github.com/ankane/onnxruntime-php"
-            },
-            "time": "2024-09-04T21:59:16+00:00"
-        },
         {
             "name": "bdelespierre/php-kmeans",
             "version": "v2.2.0",
@@ -2110,6 +2005,70 @@
                 }
             ],
             "time": "2024-01-28T23:22:08+00:00"
+        },
+        {
+            "name": "mindfulcoder49/mysql-vector-openai",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mindfulcoder49/mysql-vector-openai.git",
+                "reference": "d64fa361409565f91a910649e067b058ba2c228f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mindfulcoder49/mysql-vector-openai/zipball/d64fa361409565f91a910649e067b058ba2c228f",
+                "reference": "d64fa361409565f91a910649e067b058ba2c228f",
+                "shasum": ""
+            },
+            "require": {
+                "bdelespierre/php-kmeans": "^2.2",
+                "ext-ctype": "*",
+                "ext-iconv": "*",
+                "ext-intl": "*",
+                "ext-mbstring": "*",
+                "ext-mysqli": "*",
+                "php": ">=8.0",
+                "symfony/polyfill-ctype": "^1.28",
+                "symfony/polyfill-iconv": "^1.28",
+                "symfony/polyfill-intl-normalizer": "^1.28",
+                "symfony/polyfill-mbstring": "^1.28"
+            },
+            "replace": {
+                "symfony/polyfill-ctype": "^1.28",
+                "symfony/polyfill-iconv": "^1.28",
+                "symfony/polyfill-intl-normalizer": "^1.28",
+                "symfony/polyfill-mbstring": "^1.28"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MHz\\MysqlVector\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Allan Pichardo",
+                    "email": "allan.pichardo@gmail.com",
+                    "homepage": "https://allanpichardo.com"
+                },
+                {
+                    "name": "Alex Alcivar",
+                    "email": "alex.g.alcivar49@gmail.com",
+                    "homepage": "https://alcivartech.com"
+                }
+            ],
+            "description": "Perform vector operations natively on MySQL using openAI embeddings",
+            "support": {
+                "source": "https://github.com/mindfulcoder49/mysql-vector-openai/tree/v1.0.0"
+            },
+            "time": "2024-09-10T12:49:28+00:00"
         },
         {
             "name": "monolog/monolog",

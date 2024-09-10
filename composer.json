@@ -6,11 +6,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "allanpichardo/mysql-vector": "^2.0",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "mindfulcoder49/mysql-vector-openai": "^1.0",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
