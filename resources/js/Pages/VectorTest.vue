@@ -5,9 +5,14 @@
       <!-- Embed Text -->
       <div>
         <h3>Embed Text</h3>
-        <select v-model="selectedText">
-          <option v-for="text in testTexts" :key="text" :value="text">{{ text }}</option>
-        </select>
+        <div class="quick-texts">
+            <button @click="selectedText = 'Hello world!'">Hello world!</button>
+            <button @click="selectedText = 'This is a test.'">This is a test.</button>
+            <button @click="selectedText = 'I love AI.'">I love AI.</button>
+        </div>
+        <input v-model="selectedText" placeholder="Enter text to embed" />
+        <!-- Display options as clickable quick texts-->
+
         <button @click="embedText">Embed Text</button>
         <p>{{ embedResponse }}</p>
       </div>
@@ -196,6 +201,10 @@
     color: green;
   }
 
+  .quick-texts {
+    margin-top: 10px;
+  }
+
   /* black buttons with rounded corners and white text */
     .vector-test button {
         background-color: black;
@@ -203,6 +212,16 @@
         border-radius: 5px;
         padding: 5px 10px;
         cursor: pointer;
+        margin: 5px;
+    }
+
+    .quick-texts button {
+        background-color: white;
+        color: black;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin: 5px;
     }
   </style>
   
