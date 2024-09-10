@@ -12,6 +12,7 @@ Route::delete('/vector/delete/{id}', [VectorController::class, 'deleteVector']);
 Route::post('/vector/cosine-similarity', [VectorController::class, 'calculateCosineSimilarity']);
 Route::post('/vector/search', [VectorController::class, 'searchSimilarVectors']);
 Route::post('/vector/embed', [VectorController::class, 'embedText']);
+Route::get('/vector/list', [VectorController::class, 'listVectors']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

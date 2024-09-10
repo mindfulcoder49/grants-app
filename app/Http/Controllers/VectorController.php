@@ -83,5 +83,22 @@ class VectorController extends Controller
 
         return response()->json(['embeddings' => $embeddings]);
     }
+
+    public function listVectors(Request $request)
+    {
+        // Fetch vectors from the database
+        $vectors = $this->vectorTable->selectAll();
+    
+        // Ensure all data is properly UTF-8 encoded
+        array_walk_recursive($vectors, function (&$item) {
+            if (is_string($item)) {
+                $item = mb_convert_encoding($item, 'UTF-8', 'UTF-8');
+            }
+        });
+    
+        return response()->json(['vectors' => $vectors]);
+    }
+    
+    
 }
 
