@@ -48,7 +48,43 @@ class GrantVectorSeeder extends Seeder
                 Log::info("No vector found for grant: Opportunity ID - " . $grant->opportunity_id);
 
                 // Prepare the text to be embedded (you can use relevant fields such as title, description, etc.)
-                $textToEmbed = $grant->opportunity_title . ' ' . $grant->description;  // Modify fields as needed
+                
+                
+                /* options: 
+                    'opportunity_title',
+                    'opportunity_id',
+                    'opportunity_number',
+                    'opportunity_category',
+                    'opportunity_category_explanation',
+                    'funding_instrument_type',
+                    'category_of_funding_activity',
+                    'cfda_number',
+                    'eligible_applicants',
+                    'additional_information_on_eligibility',
+                    'agency_code',
+                    'agency_name',
+                    'post_date',
+                    'close_date',
+                    'last_updated_or_created_date',
+                    'award_ceiling',
+                    'award_floor',
+                    'estimated_total_program_funding',
+                    'expected_number_of_awards',
+                    'description',
+                    'cost_sharing_requirement',
+                    'additional_information_url',
+                    'grantor_contact_email',
+                    'grantor_contact_email_description',
+                    'grantor_contact_text',
+                    'version',
+                    'created_at',
+                    'updated_at'
+                */
+
+                $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
+                $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
+                $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+                    
 
                 // Create embeddings using the embedText function of the Embedder class
                 $embedding = $this->embedder->embed([$textToEmbed]);

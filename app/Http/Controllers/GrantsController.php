@@ -81,36 +81,42 @@ class GrantsController extends Controller
         // Step 1: Embed the search term into a vector
         $embeddingResponse = $this->vectorController->embedText(new Request(['texts' => [$searchTerm]]));
         $embedding = $embeddingResponse->getData()->embeddings[0];
-    
+
         // Step 2: Search for similar vectors using the embedded search term
         $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
             'vector' => $embedding,
             'topN' => 200
         ]));
-    
+
         $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
-    
+
         // Step 3: Extract vector IDs and similarities
         $vectorIds = array_column($similarVectors, 'id');
         $vectorSimilarityMap = array_combine(
             array_column($similarVectors, 'id'),
             array_column($similarVectors, 'similarity')
         );
-    
-        // Step 4: Fetch the grants related to similar vectors and include similarity scores
-        $grants = Grant::join('grant_vector', 'grants.id', '=', 'grant_vector.grant_id')
+
+        // Step 4: Fetch the grants related to similar vectors by matching on `opportunity_id`
+        $grants = Grant::join('grant_vector', 'grants.opportunity_id', '=', 'grant_vector.opportunity_id')
             ->whereIn('grant_vector.vector_id', $vectorIds)
             ->select('grants.*', 'grant_vector.vector_id')
             ->get();
-    
+
         // Step 5: Add similarity to each grant and sort by similarity in descending order
         $grants = $grants->map(function ($grant) use ($vectorSimilarityMap) {
             $grant->similarity = $vectorSimilarityMap[$grant->vector_id] ?? 0;
             return $grant;
         })->sortByDesc('similarity');
 
-    
+        /* limit to open grants
+        $grants = $grants->filter(function ($grant) {
+            return $grant->close_date >= now()->toDateString();
+        });
+        */
+
         return $grants;
     }
+
     
 }
