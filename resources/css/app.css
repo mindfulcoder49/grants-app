@@ -83,7 +83,7 @@ h1 {
 
 @media (min-width: 768px) {
   .grant-list {
-    width: 60%;
+    width: 100%;
   }
 }
 

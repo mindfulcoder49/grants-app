@@ -20,6 +20,7 @@ Route::post('/', [GrantsController::class, 'search'])->name('search');
 Route::post('/search', [GrantsController::class, 'search'])->name('search');
 Route::get('/search', [GrantsController::class, 'search'])->name('search');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
+Route::get('/update', [SiteInfoController::class, 'update'])->name('update');
 
 Route::get('/api/last-update', [SiteInfoController::class, 'getLastUpdate']);
 Route::post('/api/ai-chat', [AiAssistantController::class, 'handleRequest'])->name('ai.assistant');

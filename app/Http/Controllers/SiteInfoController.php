@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
 
 class SiteInfoController extends Controller
 {
@@ -17,5 +18,11 @@ class SiteInfoController extends Controller
         return response()->json([
             'lastUpdate' => $lastUpdate,
         ]);
+    }
+
+    public function update()
+    {
+        //display Update.vue
+        return Inertia::render('Update');
     }
 }

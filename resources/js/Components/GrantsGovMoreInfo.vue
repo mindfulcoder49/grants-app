@@ -30,7 +30,6 @@ export default {
   name: "GrantsGovMoreInfo",
   props: {
     resultID: {
-      type: Number,
       required: true,
     },
   },
@@ -79,6 +78,9 @@ export default {
         }
 
         const data = await response.json();
+
+        //validate all the fields and set them to N/A if they are empty
+        
 
         // Decode HTML entities and strip HTML tags from fields using native JavaScript
         const cleanSynopsisDesc = this.decodeAndStripHtml(data.synopsis.synopsisDesc);

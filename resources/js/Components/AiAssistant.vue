@@ -17,25 +17,14 @@
             </div>
         </div>
 
-        <!-- Display grants and govgrants if they are not empty -->
+        <!-- Display grants if they are not empty -->
         <div class="grants-section mb-4">
-            <div v-if="grants != null" class="grants-list">
-                <h4 class="text-black font-bold">Grants:</h4>
+            <div v-if="grants != null && grants.length > 0" class="grants-list">
+                <h4 class="text-black font-bold">Selected Grants:</h4>
                 <ul>
                     <li v-for="(grant, index) in grants" :key="'grant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
-                        {{ grant.title }}
-                        <button @click="removeGrant(index)" class="ml-2 text-red-500">X</button>
-                    </li>
-                </ul>
-            </div>
-
-            <div v-if="govgrants != null" class="govgrants-list mt-4">
-                <h4 class="text-black font-bold">
-                    Government Grants:</h4>
-                <ul>
-                    <li v-for="(govgrant, index) in govgrants" :key="'govgrant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
-                        {{ govgrant.opportunityTitle }}
-                        <button @click="removeGovGrant(index)" class="ml-2 text-red-500">X</button>
+                        {{ grant.opportunity_title }}
+                        <button @click="removeGrant(grant.id)" class="ml-2 text-red-500">X</button>
                     </li>
                 </ul>
             </div>
@@ -55,36 +44,6 @@
         </form>
     </div>
 </template>
-
-
-<style scoped>
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-.scrollbar-thumb-atechBlue {
-  scrollbar-color: #2c3e50 black;
-}
-
-/* comprehensive link styling */
-
-.ai-assistant a {
-    padding-left: 1.25rem; /* equivalent to px-5 */
-    padding-right: 1.25rem; /* equivalent to px-5 */
-    margin-top: 1rem; /* equivalent to mt-4 */
-    background: linear-gradient(to top, #1f8eb9, #B8CFD6); /* equivalent to bg-gradient-to-t from-atechGreen to-atechBlue-light */
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* equivalent to shadow-lg */
-    color: black; /* equivalent to text-black */
-    font-size: 1.125rem; /* equivalent to text-lg */
-    border-radius: 0.5rem; /* equivalent to rounded-lg */
-    text-decoration: none; /* Remove underline for links */
-    display: inline-block; /* Ensures padding and margin are respected */
-}
-
-.send-button {
-    min-width: 100px;
-}
-
-</style>
 
 <script setup>
 import { reactive, ref, nextTick } from 'vue';
@@ -114,24 +73,16 @@ const messages = ref([]);
 const loading = ref(false);
 const chatHistory = ref(null);
 
-// Suggested prompts
-const suggestedPrompts = ref([
-    "Do I qualify for the Meta grant?",
-    "How do I get started with grants?",
-    "What are the best grants for startups?",
-]);
-
-// Handle grants and govgrants props
+// Props for the grants and govgrants
 const props = defineProps(['grants', 'govgrants']);
 
-// Remove grant from the grants array
-const removeGrant = (index) => {
-    props.grants.splice(index, 1);
-};
+// Emit event when a grant is removed
+const emit = defineEmits(['remove-grant']);
 
-// Remove government grant from the govgrants array
-const removeGovGrant = (index) => {
-    props.govgrants.splice(index, 1);
+// Remove grant from the assistant's conversation
+const removeGrant = (grantId) => {
+    // Emit the remove-grant event to the parent component (Home.vue)
+    emit('remove-grant', grantId);
 };
 
 // Scroll function
@@ -141,13 +92,6 @@ const scrollToBottom = () => {
             chatHistory.value.scrollTop = chatHistory.value.scrollHeight;
         }
     });
-};
-
-// Insert prompt into the textarea
-const insertPrompt = (prompt) => {
-    form.message = prompt;
-    handleResponse();
-    suggestedPrompts.value = suggestedPrompts.value.filter((item) => item !== prompt);
 };
 
 // Handle form submission
@@ -166,15 +110,8 @@ const handleResponse = async () => {
     const bodyData = {
         message: userMessage,
         history: messages.value, // Send the entire message history
+        grants: props.grants, // Include the selected grants
     };
-
-    // Automatically include grants and govgrants if they are present
-    if (props.grants) {
-        bodyData.grants = props.grants;
-    }
-    if (props.govgrants.length) {
-        bodyData.govgrants = props.govgrants;
-    }
 
     const response = await fetch(route('ai.assistant'), {
         method: 'POST',
@@ -208,14 +145,32 @@ const handleResponse = async () => {
 const renderMarkdown = (content) => {
     return md.render(content);
 };
-
 </script>
 
+<style scoped>
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thumb-atechBlue {
+  scrollbar-color: #2c3e50 black;
+}
 
-<style>
+/* comprehensive link styling */
 
+.ai-assistant a {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    margin-top: 1rem;
+    background: linear-gradient(to top, #1f8eb9, #B8CFD6);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    color: black;
+    font-size: 1.125rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    display: inline-block;
+}
 
-
-
-
+.send-button {
+    min-width: 100px;
+}
 </style>

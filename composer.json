@@ -11,7 +11,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "mindfulcoder49/mysql-vector-openai": "^1.0",
-        "tightenco/ziggy": "^2.0"
+        "tightenco/ziggy": "^2.0",
+        "yethee/tiktoken": "^0.6.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

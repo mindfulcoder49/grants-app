@@ -1,8 +1,8 @@
 <template>
     <!-- Logo template -->
-    <a href="/" class="logo">
+    
         <img src="/images/logo.png" alt="Logo" />
-    </a>
+    
   </template>
   
   <script>

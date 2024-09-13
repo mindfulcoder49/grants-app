@@ -1,7 +1,7 @@
 <template>
     <!-- Last Update Text Template -->
     <div class="last-update-text">
-      last update {{ lastUpdate }}
+      {{ lastUpdate }}
     </div>
   </template>
   

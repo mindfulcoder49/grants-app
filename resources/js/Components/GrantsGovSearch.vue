@@ -1,23 +1,24 @@
 <template>
     <div class="grants-gov-search-container">
-      <h2 class="text-center text-2xl font-bold my-4">Search Grants.gov</h2>
       
-      <!-- Input field for the Grants.gov search -->
+      <!-- Input field for the Grants.gov search 
       <input 
         v-model="searchTerm" 
         type="text" 
         placeholder="Search Grants.gov" 
         class="search-input"
       />
-  
-      <!-- Search button triggers the search -->
+      -->
+      <!-- Search button triggers the search 
       <button @click="searchGrantsGov" class="search-button">
         Search Grants.gov
       </button>
+      -->
+
   
       <!-- Displaying the search results with paging -->
       <div v-if="paginatedResults.length" class="results-container">
-        <h3 class="results-header">Search Results</h3>
+        <h3 class="results-header">Search Results for "{{ getSearchTerm() }}"</h3>
         <div class="results-content">
             <div class="pagination">
             <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
@@ -75,6 +76,13 @@ export default {
   },
   props: {
     companyDescription: String, // Prop to receive the initial search term
+  },
+  watch: {
+    // Watch for changes to companyDescription prop
+    companyDescription() {
+      this.searchTerm = this.getSearchTerm();
+      this.searchGrantsGov(); // Trigger search when companyDescription changes
+    },
   },
   methods: {
     // For now, returns the initial search term without transformation
