@@ -66,6 +66,12 @@ class GrantsTableSeeder extends Seeder
             $close_date = (string)$grant->CloseDate ? DateTime::createFromFormat('mdY', (string)$grant->CloseDate)->format('Y-m-d') : null;
             $last_updated_or_created_date = DateTime::createFromFormat('mdY', (string)$grant->LastUpdatedDate)->format('Y-m-d');
 
+            //only continue if close date is in the future and not null
+            if (empty(trim($close_date)) || $close_date < now()->format('Y-m-d')) {
+                Log::info("Close date is in the past for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
+                continue;
+            }
+
             // Data array for the current grant with html_entity_decode applied
             $grantData = [
                 'opportunity_title' => html_entity_decode((string)$grant->OpportunityTitle, ENT_QUOTES | ENT_HTML5),
