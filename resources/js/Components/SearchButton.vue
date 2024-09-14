@@ -1,6 +1,6 @@
 <template>
     <!-- Button template -->
-    <button @click="searchGrants">SEARCH FOR GRANTS</button>
+    <button @click="searchGrants">{{ buttonText }}</button>
   </template>
   
   <script>
@@ -8,6 +8,10 @@
     name: 'SearchButton',
     props: {
       companyDescription: String, // Accept the description as a prop from parent
+      buttonText: {
+        type: String,
+        default: 'SEARCH FOR GRANTS', // Default button text
+      },
     },
     methods: {
       searchGrants() {

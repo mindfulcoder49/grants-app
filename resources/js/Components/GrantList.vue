@@ -2,14 +2,15 @@
   <!-- Grant List Component -->
   <div>
     <!-- Pagination controls -->
-    <div class="pagination">
+
+
+    <!-- Check if there are grants to display -->
+    <div v-if="paginatedGrants.length > 0">
+      <div class="pagination">
       <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
       <span>Page {{ currentPage }} of {{ totalPages }}</span>
       <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
     </div>
-
-    <!-- Check if there are grants to display -->
-    <div v-if="paginatedGrants.length > 0">
       <div v-for="grant in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
         <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
           Match Score: {{ formatSimilarity(grant.similarity) }}
@@ -38,6 +39,9 @@
             <a :href="grant.additional_information_url" target="_blank" class="text-blue-500 hover:underline">
               {{ grant.additional_information_url }}
             </a>
+            <strong>Link to Grants.gov: </strong>
+            <!-- Add link to grant details on grants.gov using result.id after https://www.grants.gov/search-results-detail/-->
+            <a :href="'https://www.grants.gov/search-results-detail/' + grant.opportunity_id" target="_blank">View Details</a>
           </div>
         </div>
 
@@ -49,12 +53,18 @@
           {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
         </button>
       </div>
+      <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+    </div>
     </div>
 
     <!-- If no grants available, show a message -->
     <div v-else>
       <p>No grants found for this search.</p>
     </div>
+
   </div>
 </template>
 
@@ -135,7 +145,102 @@ export default {
 
 <style scoped>
 .grant-item {
-  padding: 1rem;
+  margin-bottom: 5%;
+  padding: 2%;
+  border-bottom: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff; /* White background for contrast */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+
+
+.pagination button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+
+
+/* General container styling */
+.grants-gov-search-container {
+  background-color: #f4f1eb; /* Light beige background */
+}
+
+/* Search input styling */
+input[type="text"] {
+  display: block;
+  padding: 0.5rem;
+  margin: auto;
+  font-size: 1.5rem;
+  border-radius: 1rem;
+  width: 80%;
+  max-width: 500px;
+  border: 1px solid #c000;
+  text-align: center;
+  /* change the color of the placeholder text */
+  color: #111;
+}
+
+/* change the color of the placeholder text */
+input[type="text"]::placeholder {
+    color: #76685b;
+    font-style: italic;
+}
+
+
+/* Search button styling */
+
+.pagination button {
+  display: block;
+  margin: 3% auto;
+  padding: 10px 20px;
+  font-size: .8rem; /* Responsive font size */
+  color: #fff; /* White text */
+  background-color: #004aad; /* Blue button */
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  min-width: 200px; /* Max width for larger screens */
+  font-weight: 700;
+}
+
+.pagination button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Results list styling */
+.results-list {
+  list-style: none;
+  padding: 0;
+}
+
+/* Result item styling */
+.result-item {
+  margin-bottom: 5%;
+  padding: 2%;
+  border-bottom: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff; /* White background for contrast */
+}
+
+.result-item h4 {
+  margin: 0;
+  font-size: 1.125rem; /* Equivalent to 18px */
+  font-weight: bold;
+  margin-bottom: 0.5rem; /* Consistent spacing */
+}
+
+.result-item p {
+  margin: 5px 0;
+  font-size: 1rem; /* Equivalent to 16px */
+  color: #333; /* Dark gray text */
 }
 
 .pagination {
@@ -148,10 +253,8 @@ export default {
 .pagination button {
   min-width: 50px;
   color: white;
-  background-color: black;
   border: none;
   cursor: pointer;
-  padding: 5px 10px;
 }
 
 .pagination button:disabled {
@@ -160,6 +263,19 @@ export default {
 }
 
 .pagination span {
-  margin: 0 10px;
+  font-size: 1.1rem;
+}
+
+a {
+    padding-left: 1.25rem; /* equivalent to px-5 */
+    padding-right: 1.25rem; /* equivalent to px-5 */
+    margin-top: 1rem; /* equivalent to mt-4 */
+    background: linear-gradient(to top, #B8CFD6, #B8CFD6); /* equivalent to bg-gradient-to-t from-atechGreen to-atechBlue-light */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* equivalent to shadow-lg */
+    color: black; /* equivalent to text-black */
+    font-size: 1.125rem; /* equivalent to text-lg */
+    border-radius: 0.5rem; /* equivalent to rounded-lg */
+    text-decoration: none; /* Remove underline for links */
+    display: inline-block; /* Ensures padding and margin are respected */
 }
 </style>
