@@ -104,6 +104,10 @@ class GrantsTableSeeder extends Seeder
                 // Compare the existing record with the new data
                 $hasChanged = false;
                 foreach ($grantData as $key => $value) {
+                    //only check for changes in the fields that are not timestamps
+                    if ($key == 'created_at' || $key == 'updated_at') {
+                        continue;
+                    }
                     if ($existingGrant->$key != $value) {
                         Log::info("Data has changed for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID . " - Field: $key");
                         $hasChanged = true;
