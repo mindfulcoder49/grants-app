@@ -121,14 +121,14 @@
     <!-- Page Content -->
     <main class="py-6">
       <div v-show="currentPage === 'home'">
-        <HomeSection />
+        <HomeSection :searchTerm="searchTerm" />
       </div>
       <div v-show="currentPage === 'about'">
         <About />
       </div>
       <div v-show="currentPage === 'update'">
-        <!-- can emit lastUpdate when loaded-->
-        <Update @lastUpdate="lastUpdate = $event" />
+        <!-- can emit -->
+        <Update />
       </div>
     </main>
 
@@ -160,7 +160,8 @@ export default {
   setup() {
     const showingNavigationDropdown = ref(false);
     const currentPage = ref('home'); // Default to home
-    const lastUpdate = ref(''); // Fetch last update dynamically if needed
+    //searchTerm is a prop
+    const searchTerm = ref('');
 
     const warnNavigation = () => {
       if (confirm('Navigating to Login/Register will reload the page and reset your current search and assistant conversation. Proceed?')) {
@@ -177,9 +178,9 @@ export default {
     return {
       showingNavigationDropdown,
       currentPage,
-      lastUpdate,
       warnNavigation,
       setPage,
+      searchTerm,
     };
   },
   computed: {

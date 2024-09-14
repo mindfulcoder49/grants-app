@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use DateTime;
 
 class SiteInfoController extends Controller
 {
@@ -16,7 +17,13 @@ class SiteInfoController extends Controller
         $lastUpdate = Cache::remember('last_update', 60, function () {
             // Get the latest 'updated_at' or 'created_at' from the 'grants' table
             $latestGrant = DB::table('grants')->orderBy('updated_at', 'desc')->first();
-            return $latestGrant ? $latestGrant->updated_at->format('M d, Y') : now()->format('M d, Y');
+            $latestUpdate = $latestGrant->updated_at;
+            //use DateTime to format the date like September 1, 2021 
+            $latestUpdate = new DateTime($latestUpdate);
+            $latestUpdate = $latestUpdate->format('F j, Y');
+
+            return $latestUpdate;
+
         });
 
         return response()->json([

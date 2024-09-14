@@ -30,10 +30,12 @@ class GrantsController extends Controller
         $searchTerm = $request->input('description');
         $results = [];
 
-        // If there's a search term, use the vector search by default
-        if ($searchTerm) {
-            $results = $this->vectorSearch($searchTerm);
+        // If the search term is empty when trimmed search Artificial Intelligence
+        if (empty(trim($searchTerm))) {
+            $searchTerm = 'Artificial Intelligence';
         }
+
+        $results = $this->vectorSearch($searchTerm);
 
         // Pass the results to the Inertia page along with the search term
         return Inertia::render('Home', [
