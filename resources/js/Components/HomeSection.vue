@@ -119,10 +119,6 @@ export default {
     }
   },
   mounted() {
-    // Simulate the loading of the Vector Search tab for demonstration
-    setTimeout(() => {
-      this.loadingVectorSearch = false;  // Simulate completion of loading for vector search
-    }, 2000); // Adjust the timeout for your actual load time
   },
 };
 </script>
