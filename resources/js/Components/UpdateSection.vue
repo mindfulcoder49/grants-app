@@ -32,27 +32,5 @@ export default {
   components: {
     LastUpdateText,
   },
-  setup() {
-    const lastUpdate = ref('');
-
-    // Fetch the last update from the API
-    const getLastUpdate = async () => {
-      try {
-        const response = await axios.get('/api/last-update');
-        lastUpdate.value = response.data.lastUpdate;
-      } catch (error) {
-        console.error('Error fetching last update:', error);
-      }
-    };
-
-    // Call the getLastUpdate function when the component is mounted
-    onMounted(() => {
-      getLastUpdate();
-    });
-
-    return {
-      lastUpdate,
-    };
-  },
 };
 </script>
