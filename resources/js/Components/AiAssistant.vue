@@ -23,7 +23,7 @@
                 <h4 class="text-black font-bold">Selected Grants:</h4>
                 <ul>
                     <li v-for="(grant, index) in grants" :key="'grant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
-                        {{ grant.opportunity_title }}
+                        {{ grant.opportunity_title }} {{ grant.opportunityTitle }}
                         <button @click="removeGrant(grant.id)" class="ml-2 text-red-500">X</button>
                     </li>
                 </ul>

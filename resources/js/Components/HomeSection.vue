@@ -36,7 +36,7 @@
     
     <!-- Display GovGrants content when active -->
     <div v-show="activeTab === 'govgrants'">
-      <GrantsGovSearch :companyDescription="companyDescription" />
+      <GrantsGovSearch :companyDescription="companyDescription" @grant-details="addSelectedGrant" />
     </div>
     
     <!-- Display GrantList content when active -->
