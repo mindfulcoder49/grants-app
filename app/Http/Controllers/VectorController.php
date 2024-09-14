@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use MHz\MysqlVector\VectorTable;
 use MHz\MysqlVector\Nlp\Embedder;
+use Illuminate\Support\Facades\Log;
 
 class VectorController extends Controller
 {
@@ -14,24 +15,29 @@ class VectorController extends Controller
     public function __construct()
     {
         // Initialize MySQLi connection
+        Log::info('Initializing MySQLi connection.');
         $mysqli = new \mysqli(env('DB_HOST'), env('DB_USERNAME'), env('DB_PASSWORD'), env('DB_DATABASE'));
         $tableName = 'my_vector_table';
         $dimension = 1536;
         $engine = 'InnoDB';
 
         // Initialize VectorTable
+        Log::info('Initializing VectorTable.');
         $this->vectorTable = new VectorTable($mysqli, $tableName, $dimension, $engine);
 
         // Initialize Embedder for text embedding
+        Log::info('Initializing Embedder.');
         $this->embedder = new Embedder();
     }
 
     // Insert a vector
     public function insertVector(Request $request)
     {
+        Log::debug('Inserting a new vector.');
         $vector = $request->input('vector', []); // Expecting a 384-dimensional vector
         $vectorId = $this->vectorTable->upsert($vector);
 
+        Log::debug('Vector inserted successfully.', ['vector_id' => $vectorId]);
         return response()->json(['vector_id' => $vectorId]);
     }
 
@@ -66,11 +72,17 @@ class VectorController extends Controller
     // Search for similar vectors
     public function searchSimilarVectors(Request $request)
     {
+        //put function name in logging 
+        Log::info('searchSimilarVectors: Searching for similar vectors.');
         $vector = $request->input('vector', []);
         $topN = $request->input('topN', 5);
 
+        Log::info('searchSimilarVectors: Vector received.', ['vector' => $vector]);
+        Log::info('searchSimilarVectors: Top N value.', ['topN' => $topN]);
+
         $similarVectors = $this->vectorTable->search($vector, $topN);
 
+        Log::info('searchSimilarVectors: Found similar vectors.', ['count' => count($similarVectors)]);
         return response()->json(['similar_vectors' => $similarVectors]);
     }
 
