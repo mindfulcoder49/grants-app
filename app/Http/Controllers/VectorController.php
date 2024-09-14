@@ -18,7 +18,7 @@ class VectorController extends Controller
         Log::info('Initializing MySQLi connection.');
         $mysqli = new \mysqli(env('DB_HOST'), env('DB_USERNAME'), env('DB_PASSWORD'), env('DB_DATABASE'));
         $tableName = 'my_vector_table';
-        $dimension = 1536;
+        $dimension = 256;
         $engine = 'InnoDB';
 
         // Initialize VectorTable
