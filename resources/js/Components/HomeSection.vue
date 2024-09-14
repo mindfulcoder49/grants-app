@@ -89,11 +89,15 @@ export default {
     performSearch(description) {
       this.searchPerformed = true;
       this.buttonText = 'SEARCHING...';
+      this.loadingVectorSearch = true;  // Start loading vector search
       this.$inertia.post('/', { description }, {
         onSuccess: () => {
           this.buttonText = 'SEARCH FOR GRANTS';  // Reset the button text after search completes
           this.loadingVectorSearch = false;  // Vector search loaded once data is available
-        }
+        },
+      onError: () => {
+        this.loadingVectorSearch = false;  // Stop the spinner if there's an error
+      }
       });
     },
     addSelectedGrant(grant) {
@@ -155,4 +159,19 @@ export default {
 .results-container  {
   border-top: none; /* Remove top border to align with the active tab */
 }
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 </style>
