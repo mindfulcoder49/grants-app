@@ -78,7 +78,7 @@ class GrantsController extends Controller
             Log::info('Searching for similar vectors.');
             $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
                 'vector' => $embedding,
-                'topN' => 5
+                'topN' => 20
             ]));
 
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
