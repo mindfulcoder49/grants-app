@@ -80,7 +80,7 @@ class GrantsController extends Controller
                 'vector' => $embedding,
                 'topN' => 20
             ]));
-
+            Log::info('Similar vector search successful.');
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
             Log::info('Found similar vectors.', ['count' => count($similarVectors)]);
         } catch (\Exception $e) {
