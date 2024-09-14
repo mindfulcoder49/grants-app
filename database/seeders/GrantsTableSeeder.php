@@ -105,6 +105,7 @@ class GrantsTableSeeder extends Seeder
                 $hasChanged = false;
                 foreach ($grantData as $key => $value) {
                     if ($existingGrant->$key != $value) {
+                        Log::info("Data has changed for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID . " - Field: $key");
                         $hasChanged = true;
                         break;
                     }
