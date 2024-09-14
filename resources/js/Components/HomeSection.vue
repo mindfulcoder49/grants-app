@@ -22,12 +22,15 @@
         Keyword Search
       </button>
 
+      
       <button 
-        :class="{ active: activeTab === 'vectorSearch', inactive: activeTab !== 'vectorSearch' }" 
+        :class="{ active: activeTab === 'vectorSearch', inactive: activeTab !== 'vectorSearch'}" 
+        class = "vector-search-button"
         @click="activeTab = 'vectorSearch'">
         Semantic Meaning Vector Search
-        <span v-if="loadingVectorSearch" class="loading-spinner"></span>
       </button>
+      <span v-if="loadingVectorSearch" class="loading-spinner"></span>
+      
 
     </div>
     
