@@ -15,38 +15,45 @@
       </button>
       -->
 
-  
-      <!-- Displaying the search results with paging -->
-      <div v-if="paginatedResults.length" class="results-container">
-        <h3 class="results-header">Search Results for "{{ getSearchTerm() }}"</h3>
-        <div class="results-content">
-            <div class="pagination">
-            <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-            <span>Page {{ currentPage }} of {{ totalPages }}</span>
-            <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
-            </div>
-            <ul class="results-list">
-            <li v-for="result in paginatedResults" :key="result.id" class="result-item">
-                <h4>{{ result.title }}</h4>
-                <p>{{ result.agency }} ({{ result.number }})</p>
-                <p>Open Date: {{ result.openDate }} | Close Date: {{ result.closeDate }}</p>
-                <p>Status: {{ result.oppStatus }} | ID: {{ result.id }}</p>
-                <!-- Add link to grant details on grants.gov using result.id after https://www.grants.gov/search-results-detail/-->
-                <a :href="'https://www.grants.gov/search-results-detail/' + result.id" target="_blank">View Details</a>
-                <GrantsGovMoreInfo :resultID="result.id" @grant-details="emitGrantInfoLoaded" />
-            </li>
-            </ul>
+    <!-- Displaying the search results with paging -->
+    <div v-if="paginatedResults.length" class="results-container">
+      <h3 class="results-header">Search Results for "{{ getSearchTerm() }}"</h3>
+      <div class="results-content">
+        <div class="pagination">
+          <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
         </div>
+        <ul class="results-list">
+          <li v-for="result in paginatedResults" :key="result.id" class="result-item">
+            <h4>{{ result.title }}</h4>
+            <p>{{ result.agency }} ({{ result.number }})</p>
+            <p>Open Date: {{ result.openDate }} | Close Date: {{ result.closeDate }}</p>
+            <p>Status: {{ result.oppStatus }} | ID: {{ result.id }}</p>
+            <a :href="'https://www.grants.gov/search-results-detail/' + result.id" target="_blank">View Details</a>
+
+            <!-- Include GrantsGovMoreInfo for more details and to handle button syncing -->
+            <GrantsGovMoreInfo 
+              :resultID="result.id" 
+              :addedGrants="addedGrants" 
+              @add-to-ai-conversation="addSelectedGrant"
+              @remove-from-ai-conversation="removeSelectedGrant"
+            />
+          </li>
+        </ul>
       </div>
     </div>
-  </template>
-  
-  
-  <script>
+  </div>
+</template>
+
+<script>
 import GrantsGovMoreInfo from '@/Components/GrantsGovMoreInfo.vue';
 
 export default {
   name: "GrantsGovSearch",
+  components: {
+    GrantsGovMoreInfo,
+  },
   data() {
     return {
       searchTerm: this.getSearchTerm(),
@@ -55,12 +62,12 @@ export default {
       pageSize: 5, // Number of results per page
     };
   },
-  async mounted() {
-    // Fetch data from the Grants.gov API on component mount
-    await this.searchGrantsGov();
-  },
-  components: {
-    GrantsGovMoreInfo,
+  props: {
+    companyDescription: String, // Prop to receive the initial search term
+    addedGrants: {
+      type: Array,
+      required: true
+    }
   },
   computed: {
     // Calculate the paginated results based on the current page and page size
@@ -74,42 +81,18 @@ export default {
       return Math.ceil(this.results.length / this.pageSize);
     },
   },
-  props: {
-    companyDescription: String, // Prop to receive the initial search term
-  },
-  watch: {
-    // Watch for changes to companyDescription prop
-    companyDescription() {
-      this.searchTerm = this.getSearchTerm();
-      this.searchGrantsGov(); // Trigger search when companyDescription changes
-    },
-  },
   methods: {
-    // For now, returns the initial search term without transformation
     getSearchTerm() {
-        // Return the company description as the initial search term, but if it's blank or contains only whitespace, put in Artificial Intelligence
-        if (this.companyDescription.trim() === '') {
-            return 'Artificial Intelligence';
-        }
-        //replace all occurences of AI case insensitive as a word with Artificial Intelligence
-        return this.companyDescription.replace(/\bAI\b/gi, 'Artificial Intelligence');
+      if (this.companyDescription.trim() === '') {
+        return 'Artificial Intelligence';
+      }
+      return this.companyDescription.replace(/\bAI\b/gi, 'Artificial Intelligence');
     },
-
-    // Function to fetch data from the Grants.gov API
     async searchGrantsGov() {
       const payload = {
         keyword: this.searchTerm,
-        cfda: null,
-        agencies: null,
-        dateRange: "",
-        eligibilities: null,
-        fundingCategories: null,
-        fundingInstruments: null,
-        oppStatuses: "forecasted|posted",
         rows: 5000,
-        sortBy: "",
       };
-
       try {
         const response = await fetch(
           "https://apply07.grants.gov/grantsws/rest/opportunities/search",
@@ -123,30 +106,37 @@ export default {
         );
         const data = await response.json();
         this.results = data.oppHits;
-        this.currentPage = 1; // Reset to first page after search
+        this.currentPage = 1;
       } catch (error) {
         console.error("Error fetching grants:", error);
       }
     },
-    emitGrantInfoLoaded(grant) {
-      // Re-emit the grant-info-loaded event up to Home.vue
-      this.$emit('grant-details', grant);
+    addSelectedGrant(grant) {
+      this.$emit('add-to-ai-conversation', grant);
     },
-    // Navigate to the previous page
+    removeSelectedGrant(grantId) {
+      this.$emit('remove-from-ai-conversation', grantId);
+    },
+    isAdded(grantId) {
+      return this.addedGrants.includes(grantId);
+    },
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
       }
     },
-    // Navigate to the next page
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
       }
     },
   },
+  async mounted() {
+    await this.searchGrantsGov();
+  },
 };
 </script>
+
 
   
   <style scoped>

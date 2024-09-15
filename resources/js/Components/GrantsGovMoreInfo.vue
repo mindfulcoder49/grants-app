@@ -1,28 +1,27 @@
 <template>
-    <div class="grant-more-info-container">
-      <!-- Main info always visible -->
-      <p><strong>Award Ceiling:</strong> {{ grant.synopsis?.awardCeilingFormatted || 'N/A' }}</p>
+  <div class="grant-more-info-container">
+    <!-- Main info always visible -->
+    <p><strong>Award Ceiling:</strong> {{ grant.synopsis?.awardCeilingFormatted || 'N/A' }}</p>
 
-      <!-- Toggle for showing more info -->
-      <button @click="showMore = !showMore" class="more-info-button mt-4 bg-black text-white p-2 rounded-lg cursor-pointer mr-2">
-        {{ showMore ? 'Less Info' : 'More Info' }}
-      </button>
-            <!-- Button to emit grant details -->
-      <button @click="emitGrantDetails" class="add-to-ai-chatbot-button mt-4 bg-black text-white p-2 rounded-lg cursor-pointer">
-        Add to AI Chatbot
-      </button>
+    <!-- Toggle for showing more info -->
+    <button @click="showMore = !showMore" class="more-info-button mt-4 bg-black text-white p-2 rounded-lg cursor-pointer mr-2">
+      {{ showMore ? 'Less Info' : 'More Info' }}
+    </button>
 
-      <!-- Additional info visible only if showMore is true -->
-      <div v-show="showMore" class="more-info-content">
-        <p><strong>Estimated Funding:</strong> {{ grant.synopsis?.estimatedFundingFormatted || 'N/A' }}</p>
-        <p><strong>Agency Contact:</strong> {{ grant.synopsis?.agencyContactDesc || 'N/A' }}</p>
-        <p><strong>Closing Date:</strong> {{ grant.synopsis?.responseDate || 'N/A' }}</p>
-        <p><strong>Synopsis:</strong> {{ grant.synopsis?.synopsisDesc || 'N/A' }}</p>
-        <p><strong>Applicant Eligibility:</strong> {{ grant.synopsis?.applicantEligibilityDesc || 'N/A' }}</p>
-      </div>
+    <!-- Add to AI Conversation Button -->
+    <button @click="toggleGrant(grant)" class="add-to-ai-chatbot-button mt-4 bg-black text-white p-2 rounded-lg cursor-pointer">
+      {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
+    </button>
 
-
+    <!-- Additional info visible only if showMore is true -->
+    <div v-show="showMore" class="more-info-content">
+      <p><strong>Estimated Funding:</strong> {{ grant.synopsis?.estimatedFundingFormatted || 'N/A' }}</p>
+      <p><strong>Agency Contact:</strong> {{ grant.synopsis?.agencyContactDesc || 'N/A' }}</p>
+      <p><strong>Closing Date:</strong> {{ grant.synopsis?.responseDate || 'N/A' }}</p>
+      <p><strong>Synopsis:</strong> {{ grant.synopsis?.synopsisDesc || 'N/A' }}</p>
+      <p><strong>Applicant Eligibility:</strong> {{ grant.synopsis?.applicantEligibilityDesc || 'N/A' }}</p>
     </div>
+  </div>
 </template>
 
 <script>
@@ -32,17 +31,15 @@ export default {
     resultID: {
       required: true,
     },
+    addedGrants: {
+      type: Array,
+      required: true
+    }
   },
   data() {
     return {
       showMore: false,
       grant: {
-        opportunityTitle: '',
-        opportunityNumber: '',
-        agencyDetails: {
-          agencyName: '',
-        },
-        fundingActivityCategories: [{ description: '' }],
         synopsis: {
           estimatedFundingFormatted: '',
           awardCeilingFormatted: '',
@@ -79,19 +76,12 @@ export default {
 
         const data = await response.json();
 
-        //validate all the fields and set them to N/A if they are empty
-        
-
-        // Decode HTML entities and strip HTML tags from fields using native JavaScript
-        const cleanSynopsisDesc = this.decodeAndStripHtml(data.synopsis.synopsisDesc);
-        const cleanEligibilityDesc = this.decodeAndStripHtml(data.synopsis.applicantEligibilityDesc);
-
         this.grant = {
           ...data,
           synopsis: {
             ...data.synopsis,
-            synopsisDesc: cleanSynopsisDesc,
-            applicantEligibilityDesc: cleanEligibilityDesc,
+            synopsisDesc: this.decodeAndStripHtml(data.synopsis.synopsisDesc),
+            applicantEligibilityDesc: this.decodeAndStripHtml(data.synopsis.applicantEligibilityDesc),
           },
         };
 
@@ -99,13 +89,16 @@ export default {
         console.error("Error fetching grant details:", error);
       }
     },
-
-    // Method to emit the grant details when user clicks "Add to AI Chatbot"
-    emitGrantDetails() {
-      this.$emit('grant-details', this.grant);
+    toggleGrant(grant) {
+      if (this.isAdded(grant.id)) {
+        this.$emit('remove-from-ai-conversation', grant.id);
+      } else {
+        this.$emit('add-to-ai-conversation', grant);
+      }
     },
-
-    // Method to decode HTML entities and strip tags using native JavaScript
+    isAdded(grantId) {
+      return this.addedGrants.includes(grantId);
+    },
     decodeAndStripHtml(text) {
       const tempElement = document.createElement('div');
       tempElement.innerHTML = text;

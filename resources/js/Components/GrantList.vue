@@ -62,7 +62,7 @@
 
     <!-- If no grants available, show a message -->
     <div v-else>
-      <p>No grants found for this search.</p>
+      <p>No grants found. Results may still be loading.</p>
     </div>
 
   </div>

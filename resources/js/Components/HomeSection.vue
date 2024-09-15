@@ -36,7 +36,12 @@
     
     <!-- Display GovGrants content when active -->
     <div v-show="activeTab === 'govgrants'">
-      <GrantsGovSearch :companyDescription="companyDescription" @grant-details="addSelectedGrant" />
+      <GrantsGovSearch 
+      :addedGrants="selectedGrants.map(g => g.id)"  
+      :companyDescription="companyDescription" 
+      @add-to-ai-conversation="addSelectedGrant"
+      @remove-from-ai-conversation="removeSelectedGrant"
+               />
     </div>
     
     <!-- Display GrantList content when active -->
@@ -65,7 +70,7 @@ import GrantList from '@/Components/GrantList.vue';
 import GrantsGovSearch from '@/Components/GrantsGovSearch.vue';
 
 export default {
-  name: 'Home',
+  name: 'HomeSection',
   components: { SearchInput, SearchButton, AiAssistant, GrantList, GrantsGovSearch },
   data() {
     return {

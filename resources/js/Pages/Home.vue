@@ -87,11 +87,12 @@
       <!-- Responsive Navigation Menu -->
       <div :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }" class="sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-          <SpanResponsiveNavLink :href="route('home')" :active="currentPage === 'home'" @click="setPage('home')">Home</SpanResponsiveNavLink>
-          <SpanResponsiveNavLink :href="route('about')" :active="currentPage === 'about'" @click="setPage('about')">About</SpanResponsiveNavLink>
-          <SpanResponsiveNavLink :href="route('update')" :active="currentPage === 'update'" @click="setPage('update')">
+          <SpanResponsiveNavLink :active="currentPage === 'home'" @click="setPage('home')">Home</SpanResponsiveNavLink>
+          <SpanResponsiveNavLink :active="currentPage === 'about'" @click="setPage('about')">About</SpanResponsiveNavLink>
+          <SpanResponsiveNavLink :active="currentPage === 'update'" @click="setPage('update')">
             Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
           </SpanResponsiveNavLink>
+          <SpanResponsiveNavLink :active="currentPage === 'saved-grants'" @click="setPage('saved-grants')">Saved Grants</SpanResponsiveNavLink>
         </div>
 
         <div class="pt-4 pb-1 border-t border-gray-200">

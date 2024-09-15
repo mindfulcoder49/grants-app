@@ -13,7 +13,7 @@ use App\Http\Controllers\SavedGrantController;
 
 Route::middleware('auth')->group(function () {
     Route::post('/saved-grants', [SavedGrantController::class, 'store']);
-    Route::get('/saved-grants', [SavedGrantController::class, 'index']);
+    Route::get('/saved-grants', [SavedGrantController::class, 'index'])->name('saved-grants');
     Route::delete('/saved-grants/{id}', [SavedGrantController::class, 'destroy']);
 });
 
