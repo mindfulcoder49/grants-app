@@ -103,10 +103,21 @@ export default {
       }
       });
     },
-    addSelectedGrant(grant) {
-      if (!this.selectedGrants.some(g => g.id === grant.id)) {
+    async addSelectedGrant(grant) {
+      // Check if the grant is already selected
+      
         this.selectedGrants.push(grant);
-      }
+
+        // Make an API call to save the grant info if the user is authenticated
+        try {
+          const response = await axios.post('/saved-grants', {
+            grant: JSON.stringify(grant),
+          });
+          console.log('Grant saved successfully:', response.data.message);
+        } catch (error) {
+          console.error('Failed to save grant:', error.response ? error.response.data : error.message);
+        }
+      
     },
     removeSelectedGrant(grantId) {
       // Remove the grant by its ID from the selectedGrants array

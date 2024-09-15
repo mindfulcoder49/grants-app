@@ -9,6 +9,13 @@ use App\Http\Controllers\GrantsController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\SiteInfoController;
 use App\Http\Controllers\AiAssistantController;
+use App\Http\Controllers\SavedGrantController;
+
+Route::middleware('auth')->group(function () {
+    Route::post('/saved-grants', [SavedGrantController::class, 'store']);
+    Route::get('/saved-grants', [SavedGrantController::class, 'index']);
+    Route::delete('/saved-grants/{id}', [SavedGrantController::class, 'destroy']);
+});
 
 
 Route::get('/vector-test', function () {

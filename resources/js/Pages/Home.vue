@@ -16,6 +16,7 @@
               <SpanNavLink :active="currentPage === 'update'" @click="setPage('update')">
                 Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
               </SpanNavLink>
+              <SpanNavLink :active="currentPage === 'saved-grants'" @click="setPage('saved-grants')">Saved Grants</SpanNavLink>
             </div>
           </div>
 
@@ -130,6 +131,10 @@
         <!-- can emit -->
         <Update />
       </div>
+      <div v-show="currentPage === 'saved-grants'">
+        <SavedGrants ref="savedGrantsRef" />
+      </div>
+
     </main>
 
     <!-- Footer -->
@@ -151,25 +156,20 @@ import LastUpdateText from '@/Components/LastUpdateText.vue';
 import HomeSection from '@/Components/HomeSection.vue';
 import About from '@/Pages/About.vue';
 import Update from '@/Pages/Update.vue';
+import SavedGrants from '@/Pages/SavedGrants.vue';
 import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 
 
 export default {
-  components: { ApplicationLogo, Dropdown, DropdownLink, NavLink, ResponsiveNavLink, LastUpdateText, HomeSection, About, Update, Link, SpanNavLink, SpanResponsiveNavLink },  
+  components: {
+    ApplicationLogo, Dropdown, DropdownLink, NavLink, ResponsiveNavLink, 
+    LastUpdateText, HomeSection, About, Update, Link, SpanNavLink, SpanResponsiveNavLink, SavedGrants
+  },
   setup() {
     const showingNavigationDropdown = ref(false);
     const currentPage = ref('home'); // Default to home
-    //searchTerm is a prop
     const searchTerm = ref('');
-
-    const warnNavigation = () => {
-      if (confirm('Navigating to Login/Register will reload the page and reset your current search and assistant conversation. Proceed?')) {
-        // Allow navigation
-      } else {
-        event.preventDefault(); // Prevent navigation
-      }
-    };
 
     const setPage = (page) => {
       currentPage.value = page;
@@ -178,17 +178,26 @@ export default {
     return {
       showingNavigationDropdown,
       currentPage,
-      warnNavigation,
       setPage,
       searchTerm,
     };
   },
   computed: {
     user() {
-      return this.$page.props.user; // Check for authenticated user
+      return this.$page.props.auth.user;
     },
   },
+  watch: {
+    // Watch for changes to the current page
+    currentPage(newPage) {
+      if (newPage === 'saved-grants') {
+        // Trigger data update when navigating to "Saved Grants"
+        this.$refs.savedGrantsRef.fetchGrants();
+      }
+    }
+  }
 };
+
 </script>
 
 <style scoped>

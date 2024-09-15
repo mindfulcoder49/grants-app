@@ -7,6 +7,8 @@ use App\Models\Grant;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\VectorController;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class GrantsController extends Controller
 {
@@ -123,5 +125,43 @@ class GrantsController extends Controller
         */
 
         return $grants;
+    }
+
+    /**
+     * Store the grant information for the logged-in user.
+     */
+    public function storeGrant(Request $request)
+    {
+        // Validate the incoming request for grant information
+        $request->validate([
+            'grant' => 'required|json', // Ensures the grant field is present and in JSON format
+        ]);
+
+        // Get the authenticated user's email
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated.'], 401);
+        }
+
+        // Check if the email exists in the database
+        $existingGrant = Grant::where('email', $user->email)->first();
+
+        if ($existingGrant) {
+            // If the user's grant info exists, update it
+            $existingGrant->grant_info = $request->input('grant');
+            $existingGrant->save();
+        } else {
+            // If no record exists, create a new one
+            Grant::create([
+                'email' => $user->email,
+                'grant_info' => $request->input('grant'),
+            ]);
+        }
+
+        // Log the grant information save event
+        Log::info('Grant information stored for user: ' . $user->email);
+
+        return response()->json(['message' => 'Grant information saved successfully.']);
     }
 }

@@ -37,7 +37,7 @@ export default {
   },
   computed: {
     user() {
-      return this.$page.props.user;  // Get user from Inertia page props
+      return this.$page.props.auth.user;  // Get user from Inertia page props
     }
   },
 };
