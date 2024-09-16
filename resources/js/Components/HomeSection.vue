@@ -37,6 +37,7 @@
     <!-- Display GovGrants content when active -->
     <div v-show="activeTab === 'govgrants'">
       <GrantsGovSearch 
+      ref="govGrantsSearch"
       :addedGrants="selectedGrants.map(g => g.id)"  
       :companyDescription="companyDescription" 
       @add-to-ai-conversation="addSelectedGrant"
@@ -98,14 +99,24 @@ export default {
       this.searchPerformed = true;
       this.buttonText = 'SEARCHING...';
       this.loadingVectorSearch = true;  // Start loading vector search
+
+      // Trigger both searches in parallel
       this.$inertia.post('/', { description }, {
+        preserveScroll: true,
         onSuccess: () => {
-          this.buttonText = 'SEARCH FOR GRANTS';  // Reset the button text after search completes
-          this.loadingVectorSearch = false;  // Vector search loaded once data is available
+          this.buttonText = 'SEARCH FOR GRANTS';  
+          this.loadingVectorSearch = false;  
         },
-      onError: () => {
-        this.loadingVectorSearch = false;  // Stop the spinner if there's an error
-      }
+        onError: () => {
+          this.loadingVectorSearch = false; 
+        }
+      });
+
+      // Trigger native search at the same time
+      this.$nextTick(() => {
+        if (this.$refs.govGrantsSearch) {
+          this.$refs.govGrantsSearch.searchGrantsGov();
+        }
       });
     },
     async addSelectedGrant(grant) {

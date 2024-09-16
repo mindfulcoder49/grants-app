@@ -17,7 +17,7 @@
 
     <!-- Displaying the search results with paging -->
     <div v-if="paginatedResults.length" class="results-container">
-      <h3 class="results-header">Search Results for "{{ getSearchTerm() }}"</h3>
+      <h3 class="results-header">Relevant Grants</h3>
       <div class="results-content">
         <div class="pagination">
           <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
@@ -79,6 +79,12 @@ export default {
     // Calculate total number of pages based on results length
     totalPages() {
       return Math.ceil(this.results.length / this.pageSize);
+    },
+  },
+  watch: {
+    companyDescription() {
+      this.searchTerm = this.getSearchTerm();
+
     },
   },
   methods: {
