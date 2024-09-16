@@ -74,13 +74,13 @@ class GrantsController extends Controller
             Log::info('Embedding the search term into a vector.');
             $embeddingResponse = $this->vectorController->embedText(new Request(['texts' => [$searchTerm]]));
             $embedding = $embeddingResponse->getData()->embeddings[0];
-            Log::info('Embedding successful.', ['embedding' => $embedding]);
+            Log::info('Embedding successful.');
 
             // Step 2: Search for similar vectors using the embedded search term
             Log::info('Searching for similar vectors.');
             $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
                 'vector' => $embedding,
-                'topN' => 50
+                'topN' => 20
             ]));
             Log::info('Similar vector search successful.');
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
@@ -100,7 +100,7 @@ class GrantsController extends Controller
         );
 
         // Step 4: Fetch the grants related to similar vectors by matching on `opportunity_id`
-        Log::info('Fetching grants related to similar vectors.', ['vector_ids' => $vectorIds]);
+        Log::info('Fetching grants related to similar vectors.', ['count' => count($similarVectors)]);
         $grants = Grant::join('grant_vector', 'grants.opportunity_id', '=', 'grant_vector.opportunity_id')
             ->whereIn('grant_vector.vector_id', $vectorIds)
             ->select('grants.*', 'grant_vector.vector_id')
@@ -108,21 +108,23 @@ class GrantsController extends Controller
 
         Log::info('Fetched grants.', ['count' => $grants->count()]);
 
-        // Step 5: Add similarity to each grant and sort by similarity in descending order
-        Log::info('Adding similarity scores to grants.');
+        // Step 5: Add similarity to each grant and sort by the original order of vector IDs
+        Log::info('Adding similarity scores to grants and sorting by vector order.');
         $grants = $grants->map(function ($grant) use ($vectorSimilarityMap) {
             $grant->similarity = $vectorSimilarityMap[$grant->vector_id] ?? 0;
             return $grant;
-        })->sortByDesc('similarity');
-
-        Log::info('Grants sorted by similarity.', ['sorted_count' => $grants->count()]);
-
-        // Filter by open grants (if necessary)
-        /*
-        $grants = $grants->filter(function ($grant) {
-            return $grant->close_date >= now()->toDateString();
         });
-        */
+
+        // Maintain the order of vector IDs from searchSimilarVectors
+        $vectorIdOrder = array_flip($vectorIds); // Create an array where vector_id is the key and its position is the value
+
+        // Sort grants by the order of vector IDs as returned by searchSimilarVectors
+        $grants = $grants->sort(function ($a, $b) use ($vectorIdOrder) {
+            return $vectorIdOrder[$a->vector_id] <=> $vectorIdOrder[$b->vector_id];
+        });
+
+        Log::info('Grants sorted by vector order.', ['count' => $grants->count()]);
+
 
         return $grants;
     }

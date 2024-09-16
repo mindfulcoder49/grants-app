@@ -77,10 +77,10 @@ class VectorController extends Controller
         $vector = $request->input('vector', []);
         $topN = $request->input('topN', 5);
 
-        Log::info('searchSimilarVectors: Vector received.', ['vector' => $vector]);
+        Log::info('searchSimilarVectors: Vector received.');
         Log::info('searchSimilarVectors: Top N value.', ['topN' => $topN]);
 
-        $similarVectors = $this->vectorTable->search($vector, $topN);
+        $similarVectors = $this->vectorTable->search($vector, 2000);
 
         Log::info('searchSimilarVectors: Found similar vectors.', ['count' => count($similarVectors)]);
         return response()->json(['similar_vectors' => $similarVectors]);

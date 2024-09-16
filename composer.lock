@@ -2010,16 +2010,16 @@
         },
         {
             "name": "mindfulcoder49/mysql-vector-openai",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mindfulcoder49/mysql-vector-openai.git",
-                "reference": "070c890ba73cd7f92ddaf8cf79a514b2b42d2251"
+                "reference": "452afbd12eef31f69054e365afab45c54ae3f243"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mindfulcoder49/mysql-vector-openai/zipball/070c890ba73cd7f92ddaf8cf79a514b2b42d2251",
-                "reference": "070c890ba73cd7f92ddaf8cf79a514b2b42d2251",
+                "url": "https://api.github.com/repos/mindfulcoder49/mysql-vector-openai/zipball/452afbd12eef31f69054e365afab45c54ae3f243",
+                "reference": "452afbd12eef31f69054e365afab45c54ae3f243",
                 "shasum": ""
             },
             "require": {
@@ -2068,9 +2068,9 @@
             ],
             "description": "Perform vector operations natively on MySQL using openAI embeddings",
             "support": {
-                "source": "https://github.com/mindfulcoder49/mysql-vector-openai/tree/v1.0.1"
+                "source": "https://github.com/mindfulcoder49/mysql-vector-openai/tree/v1.0.2"
             },
-            "time": "2024-09-14T18:14:13+00:00"
+            "time": "2024-09-16T16:17:11+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -2429,16 +2429,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.1.0",
+            "version": "v5.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "683130c2ff8c2739f4822ff7ac5c873ec529abd1"
+                "reference": "23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/683130c2ff8c2739f4822ff7ac5c873ec529abd1",
-                "reference": "683130c2ff8c2739f4822ff7ac5c873ec529abd1",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb",
+                "reference": "23c79fbbfb725fb92af9bcf41065c8e9a0d49ddb",
                 "shasum": ""
             },
             "require": {
@@ -2481,9 +2481,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.1.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.2.0"
             },
-            "time": "2024-07-01T20:03:41+00:00"
+            "time": "2024-09-15T16:40:33+00:00"
         },
         {
             "name": "nunomaduro/termwind",
