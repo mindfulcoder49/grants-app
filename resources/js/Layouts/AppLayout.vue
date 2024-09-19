@@ -8,6 +8,9 @@
       <footer class="pl-20">
         <p>&copy; 2024 <a href="https://alcivartech.com" class="text-blue-500 hover:underline">AlcivarTech</a></p>
       </footer>
+      <p class="mb-4">
+          <a href="/grants-android.apk" class="text-blue-500 hover:underline">Download the Android app</a>
+        </p>
     </AuthenticatedLayout>
 
     <!-- Guest layout if not authenticated -->
@@ -16,7 +19,14 @@
 
       <!-- Guest-only footer -->
       <footer class="pl-20">
-        <p>&copy; 2024 <a href="https://alcivartech.com" class="text-blue-500 hover:underline">AlcivarTech</a></p>
+        <p class="mb-4">
+          &copy; 2024 <a href="https://alcivartech.com" class="text-blue-500 hover:underline">AlcivarTech</a>
+        </p>
+        <!-- link to download grants-android.apk in the public folder-->
+         <p class="mb-4">
+          <a href="/grants-android.apk" class="text-blue-500 hover:underline">Download the Android app</a>
+        </p>
+
       </footer>
     </GuestLayout>
   </div>

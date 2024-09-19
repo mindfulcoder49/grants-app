@@ -1,0 +1,8 @@
+{
+  "appId": "com.alcivartech.grants.app",
+  "appName": "Grants",
+  "webDir": "public",
+  "server": {
+    "url": "https://grants.alcivartech.com"
+  }
+}

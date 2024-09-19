@@ -140,8 +140,12 @@
 
     <!-- Footer -->
     <footer class="pl-20">
-      <p>&copy; 2024 <a href="https://alcivartech.com" class="text-blue-500 hover:underline">AlcivarTech</a></p>
+      <p class="mb-4">&copy; 2024 <a href="https://alcivartech.com" class="text-blue-500 hover:underline">AlcivarTech</a></p>
+      <p class="mb-4">
+          <a href="/grants-android.apk" class="text-blue-500 hover:underline">Download the Android app</a>
+        </p>
     </footer>
+
   </div>
 </template>
 
