@@ -6,7 +6,7 @@ return [
         'name' => env('APP_NAME', 'Grants'),
         'short_name' => 'Grants',
         'start_url' => '/',
-        'background_color' => '#f4f1eb',
+        'background_color' => '#d8d9c6',
         'theme_color' => '#001a33',
         'display' => 'standalone',
         'orientation'=> 'any',
@@ -59,18 +59,18 @@ return [
         ],
         'shortcuts' => [
             [
-                'name' => 'Shortcut Link 1',
-                'description' => 'Shortcut Link 1 Description',
-                'url' => '/shortcutlink1',
+                'name' => 'Login',
+                'description' => 'Login Link',
+                'url' => '/login',
                 'icons' => [
                     "src" => "/images/icons/icon-72x72.png",
                     "purpose" => "any"
                 ]
             ],
             [
-                'name' => 'Shortcut Link 2',
-                'description' => 'Shortcut Link 2 Description',
-                'url' => '/shortcutlink2'
+                'name' => 'Register',
+                'description' => 'Registration Link',
+                'url' => '/register'
             ]
         ],
         'custom' => []
