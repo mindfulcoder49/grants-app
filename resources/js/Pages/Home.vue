@@ -201,6 +201,13 @@ export default {
       searchTerm,
     };
   },
+  methods: {
+    warnNavigation() {
+      if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
+        event.preventDefault();
+      }
+    }
+  },
   computed: {
     user() {
       return this.$page.props.auth.user;

@@ -31,7 +31,7 @@
           </h3>
           <p class="text-sm text-gray-700 mb-2">{{ grant.synopsis.synopsisDesc }}</p>
 
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
             <div>
               <strong>Opportunity ID:</strong> {{ grant.id }}<br>
               <strong>Opportunity Number:</strong> {{ grant.opportunityNumber }}<br>
@@ -79,7 +79,7 @@
         </h3>
           <h3 class="text-xl font-bold mb-2">{{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
           <p class="text-sm text-gray-700 mb-2">{{ grant.description }}</p>
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
             <div>
               <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
               <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
@@ -114,6 +114,9 @@
         >
           {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
         </button>
+
+        <p class="m-4">If you are logged in, clicking the "Add to AI Chatbot" button will also add this grant to your saved grants. 
+          <a href="/login" @click="warnNavigation" class="text-blue-500 hover:underline">Login</a> to save grants.</p>
       </div>
 
       <div class="pagination">
@@ -284,6 +287,11 @@ export default {
     stripHTML(html) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       return doc.body.textContent || '';
+    },
+    warnNavigation() {
+      if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
+        event.preventDefault();
+      }
     },
   }
 };

@@ -16,7 +16,12 @@
     </div>
 
     <div v-else>
-      <p class="text-center">No saved grants found.</p>
+      <div v-if="user">
+        <p class="text-center text-2xl">You have not saved any grants yet. Grants are saved when you add them to the AI assistant.</p>
+      </div>
+      <div v-else>
+        <p class="text-center text-2xl">Please <a href="/login" @click="warnNavigation" class="text-blue-500 hover:underline">login</a> to save grants.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -41,6 +46,9 @@ export default {
     // Computed property to extract all grant_info properties
     extractedGrantInfo() {
       return this.grants.map(grant => JSON.parse(grant.grant_info));
+    },
+    user () {
+      return this.$page.props.auth.user;
     }
   },
   methods: {
@@ -71,7 +79,12 @@ export default {
     removeSelectedGrant(grantId) {
       // Remove grant by its ID from the selectedGrants array
       this.selectedGrants = this.selectedGrants.filter(g => g.id !== grantId);
-    }
+    },
+    warnNavigation() {
+      if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
+        event.preventDefault();
+      }
+    },
   },
   mounted() {
     this.fetchGrants(); // Fetch grants when component is mounted

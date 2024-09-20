@@ -12,14 +12,47 @@
     <button @click="toggleGrant(grant)" class="add-to-ai-chatbot-button mt-4 bg-black text-white p-2 rounded-lg cursor-pointer">
       {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
     </button>
+    <p class="m-4">If you are logged in, clicking the "Add to AI Chatbot" button will also add this grant to your saved grants. 
+      <a href="/login" @click="warnNavigation" class="text-blue-500 hover:underline">Login</a> to save grants.</p>
 
     <!-- Additional info visible only if showMore is true -->
     <div v-show="showMore" class="more-info-content">
-      <p><strong>Estimated Funding:</strong> {{ grant.synopsis?.estimatedFundingFormatted || 'N/A' }}</p>
-      <p><strong>Agency Contact:</strong> {{ grant.synopsis?.agencyContactDesc || 'N/A' }}</p>
-      <p><strong>Closing Date:</strong> {{ grant.synopsis?.responseDate || 'N/A' }}</p>
-      <p><strong>Synopsis:</strong> {{ grant.synopsis?.synopsisDesc || 'N/A' }}</p>
-      <p><strong>Applicant Eligibility:</strong> {{ grant.synopsis?.applicantEligibilityDesc || 'N/A' }}</p>
+      <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <strong>Opportunity ID:</strong> {{ grant.id }}<br>
+              <strong>Opportunity Number:</strong> {{ grant.opportunityNumber }}<br>
+              <strong>Post Date:</strong> {{ formatDate(grant.synopsis.postingDate) }}<br>
+              <strong>Close Date:</strong> {{ formatDate(grant.synopsis.responseDate) }}<br>
+              <strong>Agency Name:</strong> {{ grant.synopsis.agencyName }}<br>
+              <strong>CFDAs:</strong><br>
+              <p v-for="(cfda, index) in grant.cfdas" :key="index">
+                {{ cfda.programTitle }}
+              </p>
+              <strong>Category of Funding Activity:</strong> {{ getOpportunityCategory(grant.opportunityCategory?.category) }}<br>
+              <strong>Cost Sharing Requirement:</strong> {{ grant.synopsis.costSharingRequirement ? 'Yes' : 'No' }}<br>
+              <strong>Version:</strong> {{ grant.revision }}
+            </div>
+
+            <div>
+              <strong>Eligibility:</strong> {{ grant.synopsis.applicantEligibilityDesc || 'N/A' }}<br>
+              <strong>Contact:</strong> {{ grant.synopsis.agencyContactEmail }}<br>
+              <strong>Agency Contact:</strong> {{ grant.synopsis.agencyContactName }}<br>
+              <strong>Agency Contact Phone:</strong> {{ grant.synopsis.agencyContactPhone }}<br>
+              <strong>Agency Contact Email:</strong> {{ grant.synopsis.agencyContactEmail }}<br>
+              <span v-if="grant.synopsis.additionalInformationUrl">
+              <strong>Website:</strong>
+              <a :href="grant.synopsis.additionalInformationUrl" target="_blank" class="text-blue-500 hover:underline">
+                {{ grant.synopsis.additionalInformationUrl }}
+              </a><br></span>
+              <span v-if="grant.synopsis.fundingDescLinkUrl">
+              <strong>Grant Funding Description:</strong>
+              <a :href="grant.synopsis.fundingDescLinkUrl" target="_blank" class="text-blue-500 hover:underline">
+                {{ grant.synopsis.fundingDescLinkUrl }}
+              </a><br></span>
+              <strong>Link to Grants.gov:</strong>
+              <a :href="'https://www.grants.gov/search-results-detail/' + grant.id" target="_blank">View Details</a>
+            </div>
+          </div>
     </div>
   </div>
 </template>
@@ -104,6 +137,106 @@ export default {
       tempElement.innerHTML = text;
       const decodedText = tempElement.textContent || tempElement.innerText || '';
       return decodedText.replace(/<[^>]*>?/gm, ''); // Remove HTML tags
+    },
+    formatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      //dates liek Sept 4 1999
+      return date.toLocaleDateString( 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    },
+    formatCurrency(value) {
+      if (!value) return '$0';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(value);
+    },
+    formatSimilarity(value) {
+      if (!value) return '0%';
+      return `${(value * 100).toFixed(2)}%`;
+    },
+    // Method to convert funding instrument code to description
+    getFundingInstrument(code) {
+      const fundingInstrumentMap = {
+        'G': 'Grant',
+        'CA': 'Cooperative Agreement',
+        'O': 'Other',
+        'PC': 'Procurement Contract',
+      };
+      return fundingInstrumentMap[code] || 'N/A';
+    },
+    // Method to convert eligibility code to description
+    getEligibilityDescription(code) {
+      const eligibilityMap = {
+        '99': 'Unrestricted',
+        '00': 'State governments',
+        '01': 'County governments',
+        '02': 'City or township governments',
+        '04': 'Special district governments',
+        '05': 'Independent school districts',
+        '06': 'Public and State controlled institutions of higher education',
+        '07': 'Native American tribal governments (Federally recognized)',
+        '08': 'Public housing authorities/Indian housing authorities',
+        '11': 'Native American tribal organizations (other than Federally recognized)',
+        '12': 'Nonprofits with 501(c)(3) status',
+        '13': 'Nonprofits without 501(c)(3) status',
+        '20': 'Private institutions of higher education',
+        '21': 'Individuals',
+        '22': 'For-profit organizations other than small businesses',
+        '23': 'Small businesses',
+        '25': 'Others'
+      };
+      return eligibilityMap[code] || 'N/A';
+    },
+    // Method to convert opportunity category to description
+    getOpportunityCategory(code) {
+      const opportunityCategoryMap = {
+        'D': 'Discretionary',
+        'M': 'Mandatory',
+        'C': 'Continuation',
+        'E': 'Earmark',
+        'O': 'Other'
+      };
+      return opportunityCategoryMap[code] || 'N/A';
+    },
+    // Method to convert funding activity category to description
+    getFundingActivity(code) {
+      const fundingActivityMap = {
+        'ACA': 'Affordable Care Act',
+        'AG': 'Agriculture',
+        'AR': 'Arts',
+        'BC': 'Business and Commerce',
+        'CD': 'Community Development',
+        'CP': 'Consumer Protection',
+        'DPR': 'Disaster Prevention and Relief',
+        'ED': 'Education',
+        'ELT': 'Employment, Labor and Training',
+        'EN': 'Energy',
+        'ENV': 'Environment',
+        'FN': 'Food and Nutrition',
+        'HL': 'Health',
+        'HO': 'Housing',
+        'HU': 'Humanities',
+        'ISS': 'Income Security and Social Services',
+        'IS': 'Information and Statistics',
+        'LJL': 'Law, Justice and Legal Services',
+        'NR': 'Natural Resources',
+        'RA': 'Recovery Act',
+        'RD': 'Regional Development',
+        'ST': 'Science and Technology',
+        'T': 'Transportation',
+        'O': 'Other'
+      };
+      return fundingActivityMap[code] || 'N/A';
+    },
+    stripHTML(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return doc.body.textContent || '';
+    },
+    warnNavigation() {
+      if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
+        event.preventDefault();
+      }
     },
   },
 };
