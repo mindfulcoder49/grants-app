@@ -21,7 +21,7 @@
         </div>
 
         <div class="form-group">
-          <label for="image">Attach an Image (optional):</label>
+          <label for="image">Screenshots of a problem can be very helpful! Please attach an Image (optional):</label>
           <input type="file" id="image" @change="handleFileUpload" />
         </div>
 
@@ -62,6 +62,8 @@ const submitFeedback = () => {
     onSuccess: () => {
       successMessage.value = 'Thank you for your feedback!';
       form.reset(); // Clear form fields after successful submission
+      // manually remove and readd the image input
+      document.getElementById('image').value = '';
     },
     onError: () => {
       errorMessage.value = 'There was an issue submitting your feedback. Please try again.';
