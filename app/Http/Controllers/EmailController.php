@@ -38,7 +38,7 @@ class EmailController extends Controller
             Mail::send([], [], function ($message) use ($validated, $recipients, $subject, $body) {
                 $message->to(array_keys($recipients))
                         ->subject($subject)
-                        ->setBody($body, 'text/plain');
+                        ->text($body); // Use the text() method to set the body as plain text
 
                 Log::info('Preparing email body', ['body' => $body]);
 
