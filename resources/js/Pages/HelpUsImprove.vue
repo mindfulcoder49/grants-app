@@ -4,7 +4,7 @@
     <div class="about-header">Help Us Improve</div>
     <div class="about-section">
       <!-- Feedback Form -->
-      <form class="feedback-form" @submit.prevent="submitFeedback">
+      <form class="feedback-form" @submit.prevent="submitFeedback" enctype="multipart/form-data">
         <div class="form-group">
           <label for="name">Name:</label>
           <input type="text" id="name" v-model="form.name" required />
@@ -20,6 +20,11 @@
           <textarea id="feedback" v-model="form.feedback" rows="5" required></textarea>
         </div>
 
+        <div class="form-group">
+          <label for="image">Attach an Image (optional):</label>
+          <input type="file" id="image" @change="handleFileUpload" />
+        </div>
+
         <button type="submit" class="submit-btn" :disabled="form.processing">Submit</button>
       </form>
       
@@ -33,22 +38,32 @@
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 
+// Initialize form data
 const form = useForm({
   name: '',
   email: '',
-  feedback: ''
+  feedback: '',
+  image: null // For the image file
 });
 
 const successMessage = ref('');
 const errorMessage = ref('');
 
+// Handle file selection for image upload
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+  form.image = file; // Attach the selected image to the form data
+};
+
 const submitFeedback = () => {
+  // Use FormData to allow file uploads
   form.post('/feedback', {
+    forceFormData: true, // Necessary to handle file uploads in Inertia.js
     onSuccess: () => {
       successMessage.value = 'Thank you for your feedback!';
       form.reset(); // Clear form fields after successful submission
     },
-    onError: (errors) => {
+    onError: () => {
       errorMessage.value = 'There was an issue submitting your feedback. Please try again.';
     }
   });
