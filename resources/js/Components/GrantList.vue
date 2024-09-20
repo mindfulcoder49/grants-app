@@ -2,46 +2,108 @@
   <!-- Grant List Component -->
   <div>
     <!-- Pagination controls -->
-
-
-    <!-- Check if there are grants to display -->
     <div v-if="paginatedGrants.length > 0">
       <div class="pagination">
-      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
-    </div>
+        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+      </div>
+      
       <div v-for="grant in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
-        <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
+
+
+
+        <div v-if="grant.opportunityTitle" class="p-4 bg-white shadow rounded-lg">
+          <!--
+          <div class="bg-black text-white">
+            <JsonTree :json="grant" />
+          </div>
+        -->
+
+
+          <!-- Match Score (if available in API data) -->
+          <h3 v-if="grant.similarity" class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
+            Match Score: {{ formatSimilarity(grant.similarity) }}
+          </h3>
+
+          <h3 class="text-xl font-bold mb-2">
+            {{ grant.opportunityTitle }} - Ceiling: {{ formatCurrency(grant.awardCeiling) }}
+          </h3>
+          <p class="text-sm text-gray-700 mb-2">{{ grant.synopsis.synopsisDesc }}</p>
+
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <strong>Opportunity ID:</strong> {{ grant.id }}<br>
+              <strong>Opportunity Number:</strong> {{ grant.opportunityNumber }}<br>
+              <strong>Post Date:</strong> {{ formatDate(grant.synopsis.postingDate) }}<br>
+              <strong>Close Date:</strong> {{ formatDate(grant.synopsis.responseDate) }}<br>
+              <strong>Agency Name:</strong> {{ grant.synopsis.agencyName }}<br>
+              <strong>CFDAs:</strong><br>
+              <p v-for="(cfda, index) in grant.cfdas" :key="index">
+                {{ cfda.programTitle }}
+              </p>
+              <strong>Category of Funding Activity:</strong> {{ getOpportunityCategory(grant.opportunityCategory?.category) }}<br>
+              <strong>Cost Sharing Requirement:</strong> {{ grant.synopsis.costSharingRequirement ? 'Yes' : 'No' }}<br>
+              <strong>Version:</strong> {{ grant.revision }}
+            </div>
+
+            <div>
+              <strong>Eligibility:</strong> {{ grant.synopsis.applicantEligibilityDesc || 'N/A' }}<br>
+              <strong>Contact:</strong> {{ grant.synopsis.agencyContactEmail }}<br>
+              <strong>Agency Contact:</strong> {{ grant.synopsis.agencyContactName }}<br>
+              <strong>Agency Contact Phone:</strong> {{ grant.synopsis.agencyContactPhone }}<br>
+              <strong>Agency Contact Email:</strong> {{ grant.synopsis.agencyContactEmail }}<br>
+              <span v-if="grant.synopsis.additionalInformationUrl">
+              <strong>Website:</strong>
+              <a :href="grant.synopsis.additionalInformationUrl" target="_blank" class="text-blue-500 hover:underline">
+                {{ grant.synopsis.additionalInformationUrl }}
+              </a><br></span>
+              <span v-if="grant.synopsis.fundingDescLinkUrl">
+              <strong>Grant Funding Description:</strong>
+              <a :href="grant.synopsis.fundingDescLinkUrl" target="_blank" class="text-blue-500 hover:underline">
+                {{ grant.synopsis.fundingDescLinkUrl }}
+              </a><br></span>
+              <strong>Link to Grants.gov:</strong>
+              <a :href="'https://www.grants.gov/search-results-detail/' + grant.id" target="_blank">View Details</a>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+        <div v-else-if="grant.opportunity_title"> <!-- Native Grant -->
+          <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
           Match Score: {{ formatSimilarity(grant.similarity) }}
         </h3>
-
-        <h3 class="text-xl font-bold mb-2">{{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
-        <p class="text-sm text-gray-700 mb-2">{{ grant.description }}</p>
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
-            <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
-            <strong>Post Date:</strong> {{ formatDate(grant.post_date) }}<br>
-            <strong>Close Date:</strong> {{ formatDate(grant.close_date) }}<br>
-            <strong>Agency Name:</strong> {{ grant.agency_name }}<br>
-            <strong>CFDA Number:</strong> {{ grant.cfda_number }}<br>
-            <strong>Category of Funding Activity:</strong> {{ grant.category_of_funding_activity }}<br>
-            <strong>Cost Sharing Requirement:</strong> {{ grant.cost_sharing_requirement ? 'Yes' : 'No' }}<br>
-            <strong>Version:</strong> {{ grant.version }}
-          </div>
-          <div>
-            <strong>Eligibility:</strong> {{ grant.eligible_applicants }}<br>
-            <strong>Funding Instrument:</strong> {{ grant.funding_instrument_type }}<br>
-            <strong>Category:</strong> {{ grant.opportunity_category }}<br>
-            <strong>Contact:</strong> {{ grant.grantor_contact_email }}<br>
-            <strong>Website:</strong> 
-            <a :href="grant.additional_information_url" target="_blank" class="text-blue-500 hover:underline">
-              {{ grant.additional_information_url }}
-            </a>
-            <strong>Link to Grants.gov: </strong>
-            <!-- Add link to grant details on grants.gov using result.id after https://www.grants.gov/search-results-detail/-->
-            <a :href="'https://www.grants.gov/search-results-detail/' + grant.opportunity_id" target="_blank">View Details</a>
+          <h3 class="text-xl font-bold mb-2">{{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
+          <p class="text-sm text-gray-700 mb-2">{{ grant.description }}</p>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
+              <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
+              <strong>Post Date:</strong> {{ formatDate(grant.post_date) }}<br>
+              <strong>Close Date:</strong> {{ formatDate(grant.close_date) }}<br>
+              <strong>Agency Name:</strong> {{ grant.agency_name }}<br>
+              <strong>CFDA Number:</strong> {{ grant.cfda_number }}<br>
+              <strong>Category of Funding Activity:</strong> {{ getFundingActivity(grant.category_of_funding_activity) }}<br>
+              <strong>Cost Sharing Requirement:</strong> {{ grant.cost_sharing_requirement ? 'Yes' : 'No' }}<br>
+              <strong>Version:</strong> {{ grant.version }}
+            </div>
+            <div>
+              <strong>Eligibility:</strong> {{ getEligibilityDescription(grant.eligible_applicants) }}<br>
+              <strong>Additional Eligibility Information:</strong> {{ stripHTML(grant.additional_information_on_eligibility) }}<br>
+              <strong>Funding Instrument:</strong> {{ getFundingInstrument(grant.funding_instrument_type) }}<br>
+              <strong>Category:</strong> {{ getOpportunityCategory(grant.opportunity_category) }}<br>
+              <strong>Contact:</strong> {{ grant.grantor_contact_email }}<br>
+              <strong>Website:</strong> 
+              <a :href="grant.additional_information_url" target="_blank" class="text-blue-500 hover:underline">
+                {{ grant.additional_information_url }}
+              </a><br>
+              <strong>Link to Grants.gov: </strong>
+              <a :href="'https://www.grants.gov/search-results-detail/' + grant.opportunity_id" target="_blank">View Details</a>
+            </div>
           </div>
         </div>
 
@@ -53,24 +115,29 @@
           {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
         </button>
       </div>
+
       <div class="pagination">
-      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
-    </div>
+        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+      </div>
     </div>
 
     <!-- If no grants available, show a message -->
     <div v-else>
       <p>No grants found. Results may still be loading.</p>
     </div>
-
   </div>
 </template>
 
 <script>
+import JsonTree from '@/Components/JsonTree.vue';
+
 export default {
   name: 'GrantList',
+  components: {
+    JsonTree,
+  },
   props: {
     grants: {
       type: Array,
@@ -126,7 +193,8 @@ export default {
     formatDate(value) {
       if (!value) return '';
       const date = new Date(value);
-      return date.toLocaleDateString('en-US');
+      //dates liek Sept 4 1999
+      return date.toLocaleDateString( 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     },
     formatCurrency(value) {
       if (!value) return '$0';
@@ -138,7 +206,85 @@ export default {
     formatSimilarity(value) {
       if (!value) return '0%';
       return `${(value * 100).toFixed(2)}%`;
-    }
+    },
+    // Method to convert funding instrument code to description
+    getFundingInstrument(code) {
+      const fundingInstrumentMap = {
+        'G': 'Grant',
+        'CA': 'Cooperative Agreement',
+        'O': 'Other',
+        'PC': 'Procurement Contract',
+      };
+      return fundingInstrumentMap[code] || 'N/A';
+    },
+    // Method to convert eligibility code to description
+    getEligibilityDescription(code) {
+      const eligibilityMap = {
+        '99': 'Unrestricted',
+        '00': 'State governments',
+        '01': 'County governments',
+        '02': 'City or township governments',
+        '04': 'Special district governments',
+        '05': 'Independent school districts',
+        '06': 'Public and State controlled institutions of higher education',
+        '07': 'Native American tribal governments (Federally recognized)',
+        '08': 'Public housing authorities/Indian housing authorities',
+        '11': 'Native American tribal organizations (other than Federally recognized)',
+        '12': 'Nonprofits with 501(c)(3) status',
+        '13': 'Nonprofits without 501(c)(3) status',
+        '20': 'Private institutions of higher education',
+        '21': 'Individuals',
+        '22': 'For-profit organizations other than small businesses',
+        '23': 'Small businesses',
+        '25': 'Others'
+      };
+      return eligibilityMap[code] || 'N/A';
+    },
+    // Method to convert opportunity category to description
+    getOpportunityCategory(code) {
+      const opportunityCategoryMap = {
+        'D': 'Discretionary',
+        'M': 'Mandatory',
+        'C': 'Continuation',
+        'E': 'Earmark',
+        'O': 'Other'
+      };
+      return opportunityCategoryMap[code] || 'N/A';
+    },
+    // Method to convert funding activity category to description
+    getFundingActivity(code) {
+      const fundingActivityMap = {
+        'ACA': 'Affordable Care Act',
+        'AG': 'Agriculture',
+        'AR': 'Arts',
+        'BC': 'Business and Commerce',
+        'CD': 'Community Development',
+        'CP': 'Consumer Protection',
+        'DPR': 'Disaster Prevention and Relief',
+        'ED': 'Education',
+        'ELT': 'Employment, Labor and Training',
+        'EN': 'Energy',
+        'ENV': 'Environment',
+        'FN': 'Food and Nutrition',
+        'HL': 'Health',
+        'HO': 'Housing',
+        'HU': 'Humanities',
+        'ISS': 'Income Security and Social Services',
+        'IS': 'Information and Statistics',
+        'LJL': 'Law, Justice and Legal Services',
+        'NR': 'Natural Resources',
+        'RA': 'Recovery Act',
+        'RD': 'Regional Development',
+        'ST': 'Science and Technology',
+        'T': 'Transportation',
+        'O': 'Other'
+      };
+      return fundingActivityMap[code] || 'N/A';
+    },
+    stripHTML(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return doc.body.textContent || '';
+    },
   }
 };
 </script>
@@ -159,14 +305,10 @@ export default {
   margin-top: 20px;
 }
 
-
-
 .pagination button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
-
-
 
 /* General container styling */
 .grants-gov-search-container {
@@ -194,9 +336,7 @@ input[type="text"]::placeholder {
     font-style: italic;
 }
 
-
 /* Search button styling */
-
 .pagination button {
   display: block;
   margin: 3% auto;

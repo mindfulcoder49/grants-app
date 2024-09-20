@@ -30,17 +30,21 @@
             </div>
         </div>
 
-        <form @submit.prevent="handleResponse" class="text-2xl">
+        <form @submit.prevent="handleResponse" class="text-xl">
             <textarea
                 v-model="form.message"
                 placeholder="Which grants are attached to this conversation?"
                 class="w-full p-3 rounded-lg border-none bg-gradient-to-r from-atechBlue to-atechBlue-dark tex-black text-l"
                 rows="2"
             ></textarea>
-
-            <button type="submit" class="send-button cursor-pointer rounded-lg border border-white bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] text-black p-4 mt-4 w-[20vw] mx-[38vw]">
-                Send
-            </button>
+            <div class="flex-col sm:flex-row sm:space-x-4">
+                <button type="submit" class="send-button cursor-pointer rounded-lg border border-white bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] text-black p-4 mt-4 w-full sm:w-3/5">
+                    Send
+                </button>
+                <button @click="downloadConversation" class="send-button cursor-pointer rounded-lg border border-white bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] text-black p-4 mt-2 w-full sm:w-1/3 ">
+                    Download Chat
+                </button>
+            </div>
         </form>
     </div>
 </template>
@@ -50,6 +54,8 @@ import { reactive, ref, nextTick } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import markdownit from 'markdown-it';
 import markdownItLinkAttributes from 'markdown-it-link-attributes';
+
+
 
 const md = markdownit({
   html: true,
@@ -76,6 +82,7 @@ const chatHistory = ref(null);
 // Props for the grants and govgrants
 const props = defineProps(['grants', 'govgrants']);
 
+console.log('Grants:', props.grants);
 // Emit event when a grant is removed
 const emit = defineEmits(['remove-grant']);
 
@@ -144,6 +151,18 @@ const handleResponse = async () => {
 // Render markdown
 const renderMarkdown = (content) => {
     return md.render(content);
+};
+
+const downloadConversation = () => {
+    const conversation = messages.value.map((message) => `${message.role}: ${message.content}`).join('\n');
+    const blob = new Blob([conversation], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    //put human readable timestamp to the second in the file name
+    a.download = `grants-conversation-${new Date().toISOString().replace(/[-:.]/g, '').replace('T', '-').slice(0, 17)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
 };
 </script>
 

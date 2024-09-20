@@ -2,27 +2,19 @@
   <div>
     <h1 class="text-center text-3xl font-bold my-12">Saved Grants</h1>
 
-    <!-- Check if there are saved grants -->
+    <AiAssistant :grants="selectedGrants" @remove-grant="removeSelectedGrant" />
+    
     <div v-if="grants.length > 0">
       <h2 class="text-lg font-semibold p-4">Grants for {{ grants[0].email }}</h2>
-      <div v-for="(grant, index) in grants" :key="grant.id" class="saved-grant">
-        
-        <!-- Root collapse toggle for the grant -->
-        <div @click="toggleGrantCollapse(index)" class="root-toggle">
-          <strong>Saved Grant #{{ grant.id }}</strong>
-          <span class="toggle">[{{ collapsed[index] ? 'Show' : 'Hide' }}]</span>
-        </div>
-
-        <!-- Conditionally display the JsonTree component -->
-        <div v-show="!collapsed[index]">
-          <JsonTree :json="JSON.parse(grant.grant_info)" />
-        </div>
-
-        <button class="mt-2 text-red-500 hover:text-red-700" @click="deleteGrant(grant.id)">Delete</button>
-      </div>
+      
+      <GrantList 
+        :grants="extractedGrantInfo" 
+        :addedGrants="selectedGrants.map(g => g.id)"
+        @add-to-ai-conversation="addSelectedGrant"
+        @remove-from-ai-conversation="removeSelectedGrant"
+      />
     </div>
 
-    <!-- No grants found message -->
     <div v-else>
       <p class="text-center">No saved grants found.</p>
     </div>
@@ -31,19 +23,27 @@
 
 <script>
 import axios from 'axios';
-import JsonTree from '@/Components/JsonTree.vue'; // Import JsonTree component
+import JsonTree from '@/Components/JsonTree.vue';
+import AiAssistant from '@/Components/AiAssistant.vue';
+import GrantList from '@/Components/GrantList.vue';
 
 export default {
   name: 'SavedGrants',
-  components: { JsonTree }, // Register JsonTree
+  components: { JsonTree, AiAssistant, GrantList },
   data() {
     return {
-      grants: [], // Store saved grants here
-      collapsed: {} // Track collapse state for each grant
+      grants: [],
+      selectedGrants: [], // Store selected grants here
+      collapsed: {}
     };
   },
+  computed: {
+    // Computed property to extract all grant_info properties
+    extractedGrantInfo() {
+      return this.grants.map(grant => JSON.parse(grant.grant_info));
+    }
+  },
   methods: {
-    // Fetch saved grants when the component is mounted
     async fetchGrants() {
       try {
         const response = await axios.get('/saved-grants');
@@ -52,19 +52,25 @@ export default {
         console.error('Failed to fetch saved grants:', error);
       }
     },
-    // Delete a saved grant
     async deleteGrant(grantId) {
       try {
         await axios.delete(`/saved-grants/${grantId}`);
-        this.grants = this.grants.filter(grant => grant.id !== grantId); // Remove grant from local array
+        this.grants = this.grants.filter(grant => grant.id !== grantId);
+        this.removeSelectedGrant(grantId); // Remove from selected grants if deleted
       } catch (error) {
         console.error('Failed to delete grant:', error);
       }
     },
-    // Toggle root collapse for a specific grant
     toggleGrantCollapse(index) {
-      // Vue 3 allows direct manipulation of reactive objects
       this.collapsed[index] = !this.collapsed[index];
+    },
+    addSelectedGrant(grant) {
+      // Add grant to selected grants
+      this.selectedGrants.push(grant);
+    },
+    removeSelectedGrant(grantId) {
+      // Remove grant by its ID from the selectedGrants array
+      this.selectedGrants = this.selectedGrants.filter(g => g.id !== grantId);
     }
   },
   mounted() {

@@ -4,7 +4,6 @@
         <li v-for="(value, key) in json" :key="key">
           <span @click="toggleCollapse(key)">
             <strong>{{ key }}: </strong>
-            <!-- Display a preview of the value -->
             <template v-if="isObjectOrArray(value)">
               <span class="toggle">
                 [{{ collapsed[key] ? '...' : (Array.isArray(value) ? 'Array' : 'Object') }}]
@@ -14,7 +13,6 @@
               <span>{{ formatValue(value) }}</span>
             </template>
           </span>
-          <!-- Display nested objects or arrays only if not collapsed -->
           <div v-if="!collapsed[key] && isObjectOrArray(value)" class="nested">
             <JsonTree :json="value" v-if="isObjectOrArray(value)" />
           </div>

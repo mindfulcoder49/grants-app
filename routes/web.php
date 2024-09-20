@@ -10,6 +10,10 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\SiteInfoController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\SavedGrantController;
+use App\Http\Controllers\EmailController;
+
+Route::post('/feedback', [EmailController::class, 'store']);
+
 
 Route::middleware('auth')->group(function () {
     Route::post('/saved-grants', [SavedGrantController::class, 'store']);

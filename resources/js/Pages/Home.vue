@@ -2,17 +2,20 @@
   <div>
     <!-- Header Section -->
     <nav class="">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex">
             <!-- Logo -->
-            <div class="shrink-0 flex items-center">
-                <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+            <div class="shrink-0 flex items-center"
+            @click="setPage('home')">
+              <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" /> 
             </div>
             <!-- Navigation Links (Visible on both Guest and Authenticated views) -->
-            <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+            <div class="hidden space-x-8 md:-my-px md:ml-10 md:flex">
               <SpanNavLink :active="currentPage === 'home'" @click="setPage('home')">Home</SpanNavLink>
               <SpanNavLink :active="currentPage === 'about'" @click="setPage('about')">About</SpanNavLink>
+              <SpanNavLink :active="currentPage === 'sources'" @click="setPage('sources')">Sources</SpanNavLink>
+              <SpanNavLink :active="currentPage === 'help-us-improve'" @click="setPage('help-us-improve')">Help Us Improve</SpanNavLink>
               <SpanNavLink :active="currentPage === 'update'" @click="setPage('update')">
                 Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
               </SpanNavLink>
@@ -20,7 +23,7 @@
             </div>
           </div>
 
-          <div class="hidden sm:flex sm:items-center sm:ml-6">
+          <div class="hidden md:flex md:items-center md:ml-6">
             <!-- If user is authenticated -->
             <div v-if="user" class="ml-3 relative">
               <Dropdown align="right" width="48">
@@ -70,7 +73,7 @@
           </div>
 
           <!-- Hamburger (Mobile View) -->
-          <div class="-mr-2 flex items-center sm:hidden">
+          <div class="-mr-2 flex items-center md:hidden">
             <button
               @click="showingNavigationDropdown = !showingNavigationDropdown"
               class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
@@ -85,10 +88,12 @@
       </div>
 
       <!-- Responsive Navigation Menu -->
-      <div :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }" class="sm:hidden">
+      <div :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }" class="md:hidden">
         <div class="pt-2 pb-3 space-y-1">
           <SpanResponsiveNavLink :active="currentPage === 'home'" @click="setPage('home')">Home</SpanResponsiveNavLink>
           <SpanResponsiveNavLink :active="currentPage === 'about'" @click="setPage('about')">About</SpanResponsiveNavLink>
+          <SpanResponsiveNavLink :active="currentPage === 'sources'" @click="setPage('sources')">Sources</SpanResponsiveNavLink>
+          <SpanResponsiveNavLink :active="currentPage === 'help-us-improve'" @click="setPage('help-us-improve')">Help Us Improve</SpanResponsiveNavLink>
           <SpanResponsiveNavLink :active="currentPage === 'update'" @click="setPage('update')">
             Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
           </SpanResponsiveNavLink>
@@ -128,6 +133,12 @@
       <div v-show="currentPage === 'about'">
         <About />
       </div>
+      <div v-show="currentPage === 'sources'">
+        <Sources />
+      </div>
+      <div v-show="currentPage === 'help-us-improve'">
+        <HelpUsImprove />
+      </div>
       <div v-show="currentPage === 'update'">
         <!-- can emit -->
         <Update />
@@ -160,6 +171,8 @@ import SpanResponsiveNavLink from '@/Components/SpanResponsiveNavLink.vue';
 import LastUpdateText from '@/Components/LastUpdateText.vue';
 import HomeSection from '@/Components/HomeSection.vue';
 import About from '@/Pages/About.vue';
+import Sources from '@/Pages/Sources.vue';
+import HelpUsImprove from '@/Pages/HelpUsImprove.vue';
 import Update from '@/Pages/Update.vue';
 import SavedGrants from '@/Pages/SavedGrants.vue';
 import { ref } from 'vue';
@@ -169,7 +182,8 @@ import { Link } from '@inertiajs/vue3';
 export default {
   components: {
     ApplicationLogo, Dropdown, DropdownLink, NavLink, ResponsiveNavLink, 
-    LastUpdateText, HomeSection, About, Update, Link, SpanNavLink, SpanResponsiveNavLink, SavedGrants
+    LastUpdateText, HomeSection, About, Update, Link, SpanNavLink, SpanResponsiveNavLink, SavedGrants,
+    Sources, HelpUsImprove
   },
   setup() {
     const showingNavigationDropdown = ref(false);
