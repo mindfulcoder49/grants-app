@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Mime\Part\TextPart;
-use Symfony\Component\Mime\Part\Multipart\AlternativePart;
-use Symfony\Component\Mime\Email;
 
 class EmailController extends Controller
 {
@@ -35,30 +32,28 @@ class EmailController extends Controller
 
             // Define email subject and message content
             $subject = 'New Feedback Submission';
-            $textBody = new TextPart("Feedback from {$validated['name']} ({$validated['email']}):\n\n{$validated['feedback']}");
+            $body = "Feedback from {$validated['name']} ({$validated['email']}):\n\n{$validated['feedback']}";
 
-            // Create a Symfony Email object to add attachments properly
-            $email = (new Email())
-                ->subject($subject)
-                ->to(...array_keys($recipients))
-                ->text("Feedback from {$validated['name']} ({$validated['email']}):\n\n{$validated['feedback']}");
+            // Send the email with optional attachment
+            Mail::send([], [], function ($message) use ($validated, $recipients, $subject, $body) {
+                $message->to(array_keys($recipients))
+                        ->subject($subject)
+                        ->setBody($body, 'text/plain');
 
-            // Log that we're preparing the email body
-            Log::info('Preparing email body', ['body' => $textBody]);
+                Log::info('Preparing email body', ['body' => $body]);
 
-            // Check if an image was uploaded and attach it
-            if (isset($validated['image'])) {
-                Log::info('Image found, attaching to email', [
-                    'image_name' => $validated['image']->getClientOriginalName(),
-                    'image_size' => $validated['image']->getSize()
-                ]);
+                // Check if an image was uploaded and attach it
+                if (isset($validated['image'])) {
+                    Log::info('Image found, attaching to email', [
+                        'image_name' => $validated['image']->getClientOriginalName(),
+                        'image_size' => $validated['image']->getSize()
+                    ]);
 
-                $email->attachFromPath($validated['image']->getRealPath(), $validated['image']->getClientOriginalName(), $validated['image']->getMimeType());
-            }
-
-            // Send the email
-            Mail::send([], [], function ($message) use ($email) {
-                $message->setSymfonyMessage($email);
+                    $message->attach($validated['image']->getRealPath(), [
+                        'as' => $validated['image']->getClientOriginalName(),
+                        'mime' => $validated['image']->getMimeType(),
+                    ]);
+                }
             });
 
             Log::info('Email sent successfully');
