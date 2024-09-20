@@ -127,6 +127,11 @@
 
     <!-- Page Content -->
     <main class="py-6">
+      <!--Absolutely positioned vertical navigation buttons-->
+      <button @click="setPage('help-us-improve')" id="feedback_button" class="fixed bottom-4 right-4 bg-[#ccc] hover:bg-[#bbb] text-black font-bold py-2 px-4 rounded-md border border-black">
+        Help Us Improve
+      </button>
+
       <div v-show="currentPage === 'home'">
         <HomeSection :searchTerm="searchTerm" />
       </div>
@@ -231,4 +236,15 @@ main {
   margin-left: 3%;
   margin-right: 3%;
 }
+
+/* Optional: Add some basic styles for the footer */
+footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+#feedback_button {
+  z-index: 1000;
+}
+
 </style>
