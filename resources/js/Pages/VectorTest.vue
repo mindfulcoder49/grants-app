@@ -1,7 +1,7 @@
 <template>
   <div class="vector-test">
     <h2>Vector Test Suite</h2>
-    
+
     <!-- Instructional Text for non-technical users -->
     <p class="instructions">
       This tool allows you to embed text into a vector space, where similar vectors (representing text) can be compared 
@@ -26,8 +26,8 @@
     <div>
       <h3>Insert Vector</h3>
       <select v-model="selectedInsertVector">
-        <option v-for="(vector, index) in embeddings" :key="index" :value="vector">
-          {{ truncateVector(vector) }}
+        <option v-for="(embedding, index) in embeddings" :key="index" :value="embedding">
+          {{ truncateText(embedding.text) }}: {{ truncateVector(embedding.vector) }}
         </option>
       </select>
       <button @click="insertVector">Insert Vector</button>
@@ -39,8 +39,8 @@
       <h3>Update Vector</h3>
       <input v-model="updateId" placeholder="Enter vector ID" />
       <select v-model="selectedUpdateVector">
-        <option v-for="(vector, index) in embeddings" :key="index" :value="vector">
-          {{ truncateVector(vector) }}
+        <option v-for="(embedding, index) in embeddings" :key="index" :value="embedding">
+          {{ truncateText(embedding.text) }}: {{ truncateVector(embedding.vector) }}
         </option>
       </select>
       <button @click="updateVector">Update Vector</button>
@@ -59,13 +59,13 @@
     <div>
       <h3>Calculate Cosine Similarity</h3>
       <select v-model="selectedVector1">
-        <option v-for="(vector, index) in embeddings" :key="index" :value="vector">
-          {{ truncateVector(vector) }}
+        <option v-for="(embedding, index) in embeddings" :key="index" :value="embedding.vector">
+          {{ truncateText(embedding.text) }}: {{ truncateVector(embedding.vector) }}
         </option>
       </select>
       <select v-model="selectedVector2">
-        <option v-for="(vector, index) in embeddings" :key="index" :value="vector">
-          {{ truncateVector(vector) }}
+        <option v-for="(embedding, index) in embeddings" :key="index" :value="embedding.vector">
+          {{ truncateText(embedding.text) }}: {{ truncateVector(embedding.vector) }}
         </option>
       </select>
       <button @click="calculateCosineSimilarity">Calculate Cosine Similarity</button>
@@ -76,8 +76,8 @@
     <div>
       <h3>Search for Similar Vectors</h3>
       <select v-model="selectedSearchVector">
-        <option v-for="(vector, index) in embeddings" :key="index" :value="vector">
-          {{ truncateVector(vector) }}
+        <option v-for="(embedding, index) in embeddings" :key="index" :value="embedding.vector">
+          {{ truncateText(embedding.text) }}: {{ truncateVector(embedding.vector) }}
         </option>
       </select>
       <input v-model="topN" placeholder="Enter top N results" />
@@ -101,11 +101,11 @@
 
     <!-- Retrieve and List All Vectors -->
     <div>
-      <h3>List All Vectors (Max 10)</h3>
+      <h3>List All Vectors (Max 100)</h3>
       <button @click="listAllVectors">List Vectors</button>
       <ul v-if="allVectors.length > 0">
         <li v-for="(vector, index) in allVectors" :key="index">
-          {{vector.id}} : {{ truncateVector(vector.vector) }}
+          {{ vector.id }} : {{ truncateText(vector.text, 100) }} : {{ truncateVector(vector.vector) }}
         </li>
       </ul>
     </div>
@@ -146,22 +146,26 @@ export default {
   },
   methods: {
     truncateVector(vector) {
-      return `[${vector.slice(0, 1).join(', ')}... (${vector.length} dimensions)]`;
+      return `[${vector.slice(0, 5).join(', ')}... (${vector.length} dimensions)]`;
+    },
+    truncateText(text, n=20) {
+      return text.length > 15 ? text.slice(0, n) + '...' : text;
     },
     truncateResult(result) {
-      //check if the result is an array and truncate if it is
-        if (Array.isArray(result)) {
-            return `[${result.slice(0, 1).join(', ')}... (${result.length} dimensions)]`;
-        }
-
+      if (Array.isArray(result)) {
+        return `[${result.slice(0, 1).join(', ')}... (${result.length} dimensions)]`;
+      }
       return typeof result === 'string' && result.length > 15
-        ? result.slice(0, 12) + '...'
+        ? result.slice(0, 100) + '...'
         : result;
     },
     embedText() {
       axios.post('/api/vector/embed', { texts: [this.selectedText] })
         .then(response => {
-          const embedding = response.data.embeddings[0];
+          const embedding = {
+            text: this.selectedText,
+            vector: response.data.embeddings[0]
+          };
           this.embeddings.push(embedding);
           this.embedResponse = `Embedding generated and saved.`;
         })
@@ -170,7 +174,7 @@ export default {
         });
     },
     insertVector() {
-      axios.post('/api/vector/insert', { vector: this.selectedInsertVector })
+      axios.post('/api/vector/insert', { vector: this.selectedInsertVector.vector, text: this.selectedInsertVector.text })
         .then(response => {
           this.insertResponse = `Inserted Vector ID: ${response.data.vector_id}`;
         })
@@ -179,7 +183,7 @@ export default {
         });
     },
     updateVector() {
-      axios.post(`/api/vector/update/${this.updateId}`, { vector: this.selectedUpdateVector })
+      axios.post(`/api/vector/update/${this.updateId}`, { vector: this.selectedUpdateVector.vector, text: this.selectedUpdateVector.text })
         .then(response => {
           this.updateResponse = `Vector updated successfully.`;
         })
@@ -220,8 +224,10 @@ export default {
         .then(response => {
           this.allVectors = response.data.vectors;
           // Also add to embeddings
-          this.embeddings = this.allVectors.map(vector => vector.vector);
-
+          this.embeddings = this.allVectors.map(vector => ({
+            text: vector.text,
+            vector: vector.vector
+          }));
         })
         .catch(error => {
           console.error(error);
@@ -262,25 +268,25 @@ export default {
   font-size: 14px;
   color: #333;
 }
-  /* black buttons with rounded corners and white text */
-  .vector-test button {
-        background-color: black;
-        color: white;
-        border-radius: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-        margin: 5px;
-    }
 
-    .quick-texts button {
-        background-color: white;
-        color: black;
-        border-radius: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-        margin: 5px;
-    }
-/* Ensure mobile responsiveness */
+.vector-test button {
+  background-color: black;
+  color: white;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.quick-texts button {
+  background-color: white;
+  color: black;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin: 5px;
+}
+
 @media screen and (max-width: 600px) {
   .vector-test {
     padding: 10px;

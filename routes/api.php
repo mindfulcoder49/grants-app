@@ -10,7 +10,7 @@ Route::post('/vector/insert', [VectorController::class, 'insertVector']);
 Route::post('/vector/update/{id}', [VectorController::class, 'updateVector']);
 Route::delete('/vector/delete/{id}', [VectorController::class, 'deleteVector']);
 Route::post('/vector/cosine-similarity', [VectorController::class, 'calculateCosineSimilarity']);
-Route::post('/vector/search', [VectorController::class, 'searchSimilarVectors']);
+Route::post('/vector/search', [VectorController::class, 'searchSimilarVectorsWithGrants']);
 Route::post('/vector/embed', [VectorController::class, 'embedText']);
 Route::get('/vector/list', [VectorController::class, 'listVectors']);
 

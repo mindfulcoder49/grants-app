@@ -48,7 +48,7 @@ Walter Rivera
       return {
         people: [{ name: 'Salil Darji', linkedInURL: 'https://www.linkedin.com/in/mindfulcoder49/' }, { name: 'Alex Alcivar', linkedInURL: 'https://www.linkedin.com/in/saldarji/' }],
         contributors: [{ name: 'Catherine Havasi' }, { name: 'John J. Stamatopolous' }, { name: 'Julie Chavez' }, { name: 'Pam Boiros' }, { name: 'Ram Katamaraja' }, { name: 'Sharna Sattiraju' }, { name: 'Thomas Schlapp' }, { name: 'Walter Rivera' }],
-        technologies: [{ name: 'ChatGPT' }, { name: 'Vue.js' }, { name: 'Inertia' }, { name: 'Laravel Breeze' }],
+        technologies: [{ name: 'GPT-4o-mini' }, { name: 'OpenAI small embeddings'},  { name: 'Vue.js' }, { name: 'Inertia' }, { name: 'Laravel Breeze' }],
       };
     },
   };
