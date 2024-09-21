@@ -24,7 +24,10 @@
         <li v-for="contributor in contributors">{{ contributor.name }}</li>
       </ul>
       <h2>Technology</h2>
-      <ul><li v-for="technology in technologies">{{ technology.name }}</li></ul>
+      <ul><li v-for="technology in technologies">{{ technology.name }}</li>
+      <li>
+        Interested in seeing more details of our vector implementation? Check out our <a href="/vector-test" class="text-blue-600">Vector Test</a> page.</li>
+      </ul>
       <h2>AI Blueprint for MA</h2>
       <p>The goal of AI Blueprint for MA is to coordinate and implement practical efforts to attract, retain and grow AI talent for MA.  We are "doers"; i.e. our volunteer teams of 2-3 people "pick up a shovel" and execute a small task each month. This effort supports that State of MA AI Task Force and is a volunteer organization. </p>
     </div>
@@ -48,7 +51,7 @@ Walter Rivera
       return {
         people: [{ name: 'Salil Darji', linkedInURL: 'https://www.linkedin.com/in/mindfulcoder49/' }, { name: 'Alex Alcivar', linkedInURL: 'https://www.linkedin.com/in/saldarji/' }],
         contributors: [{ name: 'Catherine Havasi' }, { name: 'John J. Stamatopolous' }, { name: 'Julie Chavez' }, { name: 'Pam Boiros' }, { name: 'Ram Katamaraja' }, { name: 'Sharna Sattiraju' }, { name: 'Thomas Schlapp' }, { name: 'Walter Rivera' }],
-        technologies: [{ name: 'GPT-4o-mini' }, { name: 'OpenAI small embeddings'},  { name: 'Vue.js' }, { name: 'Inertia' }, { name: 'Laravel Breeze' }],
+        technologies: [{ name: 'GPT-4o-mini' }, { name: 'OpenAI small embeddings'},  { name: 'Vue.js' }, { name: 'Inertia' }, { name: 'Laravel Breeze' },],
       };
     },
   };
