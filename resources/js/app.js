@@ -18,20 +18,7 @@ createInertiaApp({
             .use(ZiggyVue)
             .use(VueGtag, {
                 config: { id: import.meta.env.VITE_GA_ID },
-            });
-    
-        // Add global click tracking
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-    
-            if (target.tagName === 'A' || target.tagName === 'BUTTON') {
-                vueApp.config.globalProperties.$gtag('event', 'click', {
-                    event_category: 'Interaction',
-                    event_label: target.href || target.innerText,
-                });
-            }
-        });
-        vueApp.mount(el);
+            }).mount(el);
     },
     progress: {
         color: '#4B5563',

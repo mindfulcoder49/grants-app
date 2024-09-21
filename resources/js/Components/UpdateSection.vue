@@ -11,7 +11,7 @@
         Our data comes directly from the Grants.gov database, which exports an updated XML file daily. This XML file contains all active grant information and serves as the foundation for our search functionality. 
         <br /><br />
         The most recent update was on: 
-        <LastUpdateText :lastUpdate="lastUpdate" />
+        <LastUpdateText />
       </p>
 
       <h2>Why Vector Search?</h2>

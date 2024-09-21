@@ -87,7 +87,10 @@ export default {
     },
   },
   mounted() {
-    this.fetchGrants(); // Fetch grants when component is mounted
+    //if user is logged in, fetch grants
+    if (this.user) {
+      this.fetchGrants(); // Fetch grants when component is mounted
+    }
   }
 };
 </script>

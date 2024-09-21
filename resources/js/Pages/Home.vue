@@ -1,4 +1,5 @@
 <template>
+  <Head :title="currentTitle" />
   <div>
     <!-- Header Section -->
     <nav class="">
@@ -17,7 +18,7 @@
               <SpanNavLink :active="currentPage === 'sources'" @click="setPage('sources')">Sources</SpanNavLink>
               <SpanNavLink :active="currentPage === 'help-us-improve'" @click="setPage('help-us-improve')">Help Us Improve</SpanNavLink>
               <SpanNavLink :active="currentPage === 'update'" @click="setPage('update')">
-                Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
+                Last Data Update:&nbsp <LastUpdateText />
               </SpanNavLink>
               <SpanNavLink :active="currentPage === 'saved-grants'" @click="setPage('saved-grants')">Saved Grants</SpanNavLink>
             </div>
@@ -95,7 +96,7 @@
           <SpanResponsiveNavLink :active="currentPage === 'sources'" @click="setPage('sources')">Sources</SpanResponsiveNavLink>
           <SpanResponsiveNavLink :active="currentPage === 'help-us-improve'" @click="setPage('help-us-improve')">Help Us Improve</SpanResponsiveNavLink>
           <SpanResponsiveNavLink :active="currentPage === 'update'" @click="setPage('update')">
-            Last Data Update:&nbsp <LastUpdateText :lastUpdate="lastUpdate" />
+            Last Data Update:&nbsp <LastUpdateText />
           </SpanResponsiveNavLink>
           <SpanResponsiveNavLink :active="currentPage === 'saved-grants'" @click="setPage('saved-grants')">Saved Grants</SpanResponsiveNavLink>
         </div>
@@ -180,15 +181,19 @@ import Sources from '@/Pages/Sources.vue';
 import HelpUsImprove from '@/Pages/HelpUsImprove.vue';
 import Update from '@/Pages/Update.vue';
 import SavedGrants from '@/Pages/SavedGrants.vue';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import { event } from 'vue-gtag';
+import { Head } from '@inertiajs/vue3'
+
 
 
 export default {
+  name: 'Home',
   components: {
     ApplicationLogo, Dropdown, DropdownLink, NavLink, ResponsiveNavLink, 
     LastUpdateText, HomeSection, About, Update, Link, SpanNavLink, SpanResponsiveNavLink, SavedGrants,
-    Sources, HelpUsImprove
+    Sources, HelpUsImprove, Head
   },
   setup() {
     const showingNavigationDropdown = ref(false);
@@ -198,6 +203,28 @@ export default {
     const setPage = (page) => {
       currentPage.value = page;
     };
+
+    // Global click tracking with gtag 
+    onMounted(() => {
+      document.addEventListener('click', (e) => {
+        event('click', {
+          event_category: 'click',
+          //make the label the text of the element clicked
+          event_label: e.target.innerText,
+          value: 1
+        });
+      });
+
+      // Track page views
+      event('page_view', {
+        page_location: currentPage.value,
+        page_path: window.location.pathname, 
+        page_title: document.title
+      });
+
+
+
+    });
 
     return {
       showingNavigationDropdown,
@@ -217,6 +244,24 @@ export default {
     user() {
       return this.$page.props.auth.user;
     },
+    currentTitle() {
+      switch (this.currentPage) {
+        case 'home':
+          return 'Home';
+        case 'about':
+          return 'About';
+        case 'sources':
+          return 'Sources';
+        case 'help-us-improve':
+          return 'Help Us Improve';
+        case 'update':
+          return 'Data Updates';
+        case 'saved-grants':
+          return 'Saved Grants';
+        default:
+          return 'Page';
+      }
+    }
   },
   watch: {
     // Watch for changes to the current page
