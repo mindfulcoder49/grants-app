@@ -40,9 +40,12 @@ class SavedGrantController extends Controller
     /**
      * Display a listing of saved grants.
      */
-    public function index()
-    {
-        $savedGrants = SavedGrant::all();
+    public function index(Request $request)
+    {   
+        // Get the logged-in user's email
+        $user = Auth::user();
+
+        $savedGrants = SavedGrant::where('email', $user->email)->get();
         return response()->json($savedGrants);
     }
 
