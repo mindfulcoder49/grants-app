@@ -8,10 +8,11 @@
       <h2 class="text-lg font-semibold p-4">Grants for {{ grants[0].email }}</h2>
       
       <GrantList 
-        :grants="extractedGrantInfo" 
+        :grants="grants" 
         :addedGrants="selectedGrants.map(g => g.id)"
         @add-to-ai-conversation="addSelectedGrant"
         @remove-from-ai-conversation="removeSelectedGrant"
+        @grant-deleted="handleGrantDeleted"
       />
     </div>
 
@@ -43,10 +44,6 @@ export default {
     };
   },
   computed: {
-    // Computed property to extract all grant_info properties
-    extractedGrantInfo() {
-      return this.grants.map(grant => JSON.parse(grant.grant_info));
-    },
     user () {
       return this.$page.props.auth.user;
     }
@@ -60,15 +57,6 @@ export default {
         console.error('Failed to fetch saved grants:', error);
       }
     },
-    async deleteGrant(grantId) {
-      try {
-        await axios.delete(`/saved-grants/${grantId}`);
-        this.grants = this.grants.filter(grant => grant.id !== grantId);
-        this.removeSelectedGrant(grantId); // Remove from selected grants if deleted
-      } catch (error) {
-        console.error('Failed to delete grant:', error);
-      }
-    },
     toggleGrantCollapse(index) {
       this.collapsed[index] = !this.collapsed[index];
     },
@@ -79,6 +67,9 @@ export default {
     removeSelectedGrant(grantId) {
       // Remove grant by its ID from the selectedGrants array
       this.selectedGrants = this.selectedGrants.filter(g => g.id !== grantId);
+    },
+    handleGrantDeleted(grantId) {
+      this.grants = this.grants.filter(grant => grant.id !== grantId);
     },
     warnNavigation() {
       if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
