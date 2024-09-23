@@ -7,7 +7,7 @@
     <div v-if="grants.length > 0">
       <h2 class="text-lg font-semibold p-4">Grants for {{ grants[0].email }}</h2>
       
-      <GrantList 
+      <SavedGrantsList 
         :grants="grants" 
         :addedGrants="selectedGrants.map(g => g.id)"
         @add-to-ai-conversation="addSelectedGrant"
@@ -31,11 +31,11 @@
 import axios from 'axios';
 import JsonTree from '@/Components/JsonTree.vue';
 import AiAssistant from '@/Components/AiAssistant.vue';
-import GrantList from '@/Components/GrantList.vue';
+import SavedGrantsList from '@/Components/SavedGrantsList.vue';
 
 export default {
   name: 'SavedGrants',
-  components: { JsonTree, AiAssistant, GrantList },
+  components: { JsonTree, AiAssistant, SavedGrantsList },
   data() {
     return {
       grants: [],

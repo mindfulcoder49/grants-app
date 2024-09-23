@@ -12,12 +12,6 @@
       <div v-for="grant in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
 
 
-        <!-- add delete button -->
-        <button
-          @click="deleteGrant(grant.local_id)"
-          class="bg-red-500 text-white p-2 rounded-lg cursor-pointer"
-        > Delete </button>
-
 
         <div v-if="grant.opportunityTitle" class="p-4 bg-white shadow rounded-lg">
           <!--
@@ -169,32 +163,12 @@ export default {
     paginatedGrants() {
       const start = (this.currentPage - 1) * this.pageSize;
       const end = start + this.pageSize;
-
-      return this.grants.slice(start, end).map(grant => {
-        let parsedGrantInfo = {};
-
-        try {
-          // Parse the grant_info JSON string
-          parsedGrantInfo = JSON.parse(grant.grant_info);
-        } catch (error) {
-          console.error('Error parsing grant_info:', error);
-        }
-
-        // Add the top-level id as local_id into parsedGrantInfo
-        parsedGrantInfo.local_id = grant.id;
-
-        // If you need other top-level properties, add them here
-        // For example, if you have grant.similarity:
-        parsedGrantInfo.email = grant.email;
-
-        return parsedGrantInfo;
-      });
-    },  
+      return this.grants.slice(start, end);
+    },
     totalPages() {
       const length = this.grants.length || 0;
       return Math.ceil(length / this.pageSize);
     },
-
   },
   methods: {
     toggleGrant(grant) {
@@ -317,14 +291,6 @@ export default {
     warnNavigation() {
       if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
         event.preventDefault();
-      }
-    },
-    async deleteGrant(grantId) {
-      try {
-        await axios.delete(`/saved-grants/${grantId}`);
-        this.$emit('grant-deleted', grantId);
-      } catch (error) {
-        console.error('Failed to delete grant:', error);
       }
     },
   }
