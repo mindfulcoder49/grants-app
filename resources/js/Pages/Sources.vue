@@ -41,6 +41,8 @@ export default {
         { name: 'Meta Llama 3.1 Impact Grants', url: 'https://llama.meta.com/llama-impact-grants/' },
         { name: 'Climate Change AI Innovation Grants 2024', url: 'https://www.climatechange.ai/grants' },
         { name: 'Cooperative AI Foundation Research Grants', url: 'https://www.cooperativeai.com/' },
+        { name: 'MassTech Collaborative Grants', url: 'https://masstech.org/procurements-and-grants#grants' },
+        { name: 'Acorn Innovation Grants', url: 'https://www.mass-ventures.com/mvcapital/acorn' },
       ],
       results: [
         {
@@ -107,9 +109,33 @@ export default {
             application_process: 'Search and apply for grants directly through the Grants.gov portal. Follow the specific application guidelines for each grant.',
             contact: 'support@grants.gov',
             website: 'https://www.grants.gov/'
+        },
+        {
+          id: 6,
+          title: 'MassTech Collaborative Grants',
+          description: 'Various grants for innovation, technology, broadband, and cyber-focused projects in Massachusetts.',
+          amount: 'Varies by grant',
+          deadline: 'Varies by grant',
+          match: 85,
+          purpose: 'To support a variety of research, scientific, technical, and management consulting services for Massachusetts projects.',
+          eligibility: 'Open to qualified individuals, firms, and organizations.',
+          application_process: 'Review current NOFOs and submit proposals via email as directed.',
+          contact: 'proposals@masstech.org',
+          website: 'https://masstech.org/procurements-and-grants#grants'
+        },
+        {
+          id: 7,
+          title: 'Acorn Innovation Grants',
+          description: 'Grants supporting Principal Investigators at Massachusetts research institutions for developing and validating early-stage technologies.',
+          amount: '$32,500 per award (up to 10 awards)',
+          deadline: '2024-10-11',
+          match: 90,
+          purpose: 'To fund small projects that demonstrate the viability of early-stage technologies, helping researchers secure further funding for commercialization.',
+          eligibility: 'Principal Investigators at Massachusetts research institutions (universities and medical centers) with disclosed technology.',
+          application_process: 'Submit applications via the MassVentures portal after reviewing the RFP.',
+          contact: 'info@massventures.com',
+          website: 'https://www.mass-ventures.com/mvcapital/acorn'
         }
-
-
       ],
     };
   },
