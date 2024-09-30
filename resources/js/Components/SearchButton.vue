@@ -1,6 +1,32 @@
 <template>
     <!-- Button template -->
     <button @click="searchGrants">{{ buttonText }}</button>
+
+      <!-- Refined search_type and top_centroid inputs aligned with Tailwind CSS -->
+      <div class="flex flex-col items-center space-y-6">
+        <!-- Search Type Section -->
+        <div class="flex items-center space-x-4">
+          <label for="search_type" class="font-medium">Search Type:</label>
+          <div id="search_type" class="flex items-center space-x-4">
+            <label for="centroid"  class="border border-gray-600 rounded-md space-x-4 p-2">
+              <input type="radio" id="centroid" name="search_type" value="centroid" v-model="search_type" class="form-radio">
+              &nbsp  Centroid
+            </label>
+              <label for="vector" class="border border-gray-600 rounded-md space-x-4 p-2">
+              <input type="radio" id="vector" name="search_type" value="vector" v-model="search_type" class="form-radio">
+               &nbsp Vector
+            </label>
+          </div>
+        </div>
+
+        <!-- Top Centroids Section -->
+        <div class="flex items-center space-x-4">
+          <label for="top_centroids" class="font-medium">Top Centroids (1-200):</label>
+          <input type="number" id="top_centroids" name="top_centroids" v-model="top_centroids" min="1" max="200" class="form-input w-24 border border-gray-300 rounded-md">
+        </div>
+      </div>
+
+
   </template>
   
   <script>
@@ -13,12 +39,18 @@
         default: 'SEARCH FOR GRANTS', // Default button text
       },
     },
+    data() {
+      return {
+        search_type: 'centroid', // Default search type
+        top_centroids: 50, // Default top centroids
+      };
+    },
     methods: {
       searchGrants() {
         const searchPayload = {
           description: this.companyDescription,
-          search_type: "centroid",
-          top_centroids: 50,
+          search_type: this.search_type,
+          top_centroids: this.top_centroids,
         };
 
         // Emit search event with data directly from prop
