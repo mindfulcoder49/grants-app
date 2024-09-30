@@ -42,11 +42,10 @@ class GrantVectorSeeder extends Seeder
                 $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
                 $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
 
-                // Create embeddings using the embedText function of the Embedder class
-                $embedding = $this->embedder->embed([$textToEmbed]);
-
-                // Ensure we have a valid embedding
-                if (empty($embedding) || !is_array($embedding[0])) {
+                try {
+                    // Create embeddings using the embedText function of the Embedder class
+                    $embedding = $this->embedder->embed([$textToEmbed]);
+                } catch (\Exception $e) {
                     Log::error("Failed to generate embedding for grant: Opportunity ID - " . $grant->opportunity_id);
                     continue;
                 }
@@ -86,7 +85,7 @@ class GrantVectorSeeder extends Seeder
                 ->where('grant_id', $grant->id)
                 ->where('opportunity_id', $grant->opportunity_id)
                 ->first();
-                
+
                 $vectorModel = Vector::find($existingVectorEntry->vector_id);
 
                 if ($vectorModel) {
