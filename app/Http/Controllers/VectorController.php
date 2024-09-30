@@ -1,43 +1,39 @@
 <?php
+// app/Http/Controllers/VectorController.php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use MHz\MysqlVector\VectorTable;
-use MHz\MysqlVector\Nlp\Embedder;
 use Illuminate\Support\Facades\Log;
-use App\Models\Grant;
+use App\Models\Vector;
 use Illuminate\Support\Facades\DB;
+use App\Models\Grant;
+use GuzzleHttp\Client;
+
 
 class VectorController extends Controller
 {
-    protected $vectorTable;
-    protected $embedder;
+    protected $dimension;
+    const OPENAI_API_URL = 'https://api.openai.com/v1/embeddings';
+    private $apiKey;
 
     public function __construct()
     {
-        // Initialize MySQLi connection
-        Log::info('Initializing MySQLi connection.');
-        $mysqli = new \mysqli(env('DB_HOST'), env('DB_USERNAME'), env('DB_PASSWORD'), env('DB_DATABASE'));
-        $tableName = 'my_vector_table';
-        $dimension = 256;
-        $engine = 'InnoDB';
+        $this->dimension = 256; // Dimension for vectors
+        // Set your OpenAI API key (assumed to be stored in an environment variable)
+        $this->apiKey = env('OPENAI_API_KEY');
 
-        // Initialize VectorTable
-        Log::info('Initializing VectorTable.');
-        $this->vectorTable = new VectorTable($mysqli, $tableName, $dimension, $engine);
-
-        // Initialize Embedder for text embedding
-        Log::info('Initializing Embedder.');
-        $this->embedder = new Embedder();
+        if (!$this->apiKey) {
+            throw new \Exception("OpenAI API key is missing. Please set it in the environment.");
+        }
     }
 
     // Insert a vector
     public function insertVector(Request $request)
     {
         Log::debug('Inserting a new vector.');
-        $vector = $request->input('vector', []); // Expecting a 384-dimensional vector
-        $vectorId = $this->vectorTable->upsert($vector);
+        $vector = $request->input('vector', []); // Expecting a vector with a defined dimension
+        $vectorId = Vector::upsert($vector);
 
         Log::debug('Vector inserted successfully.', ['vector_id' => $vectorId]);
         return response()->json(['vector_id' => $vectorId]);
@@ -47,7 +43,7 @@ class VectorController extends Controller
     public function updateVector(Request $request, $id)
     {
         $vector = $request->input('vector', []);
-        $this->vectorTable->upsert($vector, $id);
+        Vector::upsert($vector, $id);
 
         return response()->json(['message' => 'Vector updated successfully.']);
     }
@@ -55,7 +51,7 @@ class VectorController extends Controller
     // Delete a vector
     public function deleteVector($id)
     {
-        $this->vectorTable->delete($id);
+        Vector::where('id', $id)->delete();
 
         return response()->json(['message' => 'Vector deleted successfully.']);
     }
@@ -66,7 +62,7 @@ class VectorController extends Controller
         $vector1 = $request->input('vector1', []);
         $vector2 = $request->input('vector2', []);
 
-        $similarity = $this->vectorTable->cosim($vector1, $vector2);
+        $similarity = Vector::cosineSimilarity($vector1, $vector2);
 
         return response()->json(['cosine_similarity' => $similarity]);
     }
@@ -74,7 +70,6 @@ class VectorController extends Controller
     // Search for similar vectors
     public function searchSimilarVectors(Request $request)
     {
-        //put function name in logging 
         Log::info('searchSimilarVectors: Searching for similar vectors.');
         $vector = $request->input('vector', []);
         $topN = $request->input('topN', 5);
@@ -82,12 +77,13 @@ class VectorController extends Controller
         Log::info('searchSimilarVectors: Vector received.');
         Log::info('searchSimilarVectors: Top N value.', ['topN' => $topN]);
 
-        $similarVectors = $this->vectorTable->search($vector, 2000);
+        $similarVectors = Vector::search($vector, $topN);
 
         Log::info('searchSimilarVectors: Found similar vectors.', ['count' => count($similarVectors)]);
         return response()->json(['similar_vectors' => $similarVectors]);
     }
 
+    // everything below this needs to be fixed with AI
     public function searchSimilarVectorsWithGrants(Request $request)
     {
         // Log the function name and initial inputs
@@ -153,8 +149,8 @@ class VectorController extends Controller
     public function embedText(Request $request)
     {
         $texts = $request->input('texts', []);
-
-        $embeddings = $this->embedder->embed($texts);
+        Log::info('Embedding text.', ['text_count' => count($texts)]);
+        $embeddings = $this->embed($texts[0]);
 
         return response()->json(['embeddings' => $embeddings]);
     }
@@ -206,7 +202,48 @@ class VectorController extends Controller
 
 
 
+        /**
+     * Calculates the embedding of a text using OpenAI Embeddings API.
+     * @param array $text Batch of text to embed
+     * @return array Batch of embeddings
+     * @throws \Exception
+     */
+    public function embed(string $text): array
+    {
+        $client = new Client();
 
+
+
+        // Prepare the request body
+        $body = [
+            'model' => 'text-embedding-3-small', // OpenAI embedding model
+            'input' => $text,
+            'dimensions' => $this->dimension,
+        ];
+
+        // Make the API request
+        $response = $client->post(self::OPENAI_API_URL, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $body
+        ]);
+
+        // Parse the response
+        $responseBody = json_decode($response->getBody(), true);
+
+        if (isset($responseBody['error'])) {
+            throw new \Exception('OpenAI API error: ' . $responseBody['error']['message']);
+        }
+
+        // Extract embeddings
+        $embeddings = array_map(function($result) {
+            return $result['embedding'];
+        }, $responseBody['data']);
+
+        return $embeddings;
+    }
 
     
     

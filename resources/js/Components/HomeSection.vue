@@ -95,13 +95,13 @@ export default {
     },
   },
   methods: {
-    performSearch(description) {
+    performSearch(searchPayload) {
       this.searchPerformed = true;
       this.buttonText = 'SEARCHING...';
       this.loadingVectorSearch = true;  // Start loading vector search
 
       // Trigger both searches in parallel
-      this.$inertia.post('/', { description }, {
+      this.$inertia.post('/', { ...searchPayload }, {
         preserveScroll: true,
         onSuccess: () => {
           this.buttonText = 'SEARCH FOR GRANTS';  

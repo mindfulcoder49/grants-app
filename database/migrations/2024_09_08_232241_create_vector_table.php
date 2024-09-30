@@ -1,66 +1,27 @@
 <?php
+// database/migrations/xxxx_xx_xx_create_vectors_table.php
+
 use Illuminate\Database\Migrations\Migration;
-use MHz\MysqlVector\VectorTable;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateVectorTable extends Migration
 {
-    protected $mysqli;
-
     public function up()
     {
-        // Use config() to get the database credentials
-        $host = config('database.connections.mysql.host');
-        $username = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
-        $database = config('database.connections.mysql.database');
-
-        // Initialize MySQLi connection
-        $mysqli = new \mysqli($host, $username, $password, $database);
-
-        // Check for connection errors
-        if ($mysqli->connect_error) {
-            throw new \Exception('MySQL connection failed: ' . $mysqli->connect_error);
-        }
-
-        // Define table name, dimension, and engine
-        $tableName = 'my_vector_table';
-        $dimension = 1536;
-        $engine = 'InnoDB';
-
-        // Initialize the VectorTable
-        $vectorTable = new VectorTable($mysqli, $tableName, $dimension, $engine);
-
-        // Call the initialize() method to create the table and the COSIM function
-        try {
-            $vectorTable->initialize();
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to initialize vector table: ' . $e->getMessage());
-        }
-
-        // Close the MySQLi connection
-        $mysqli->close();
+        Schema::create('vectors', function (Blueprint $table) {
+            $table->id();  // Auto increment primary key
+            $table->json('vector');  // Store the raw vector as JSON
+            $table->json('normalized_vector');  // Store the normalized vector
+            $table->double('magnitude');  // Store the magnitude of the vector
+            $table->binary('binary_code');  // Store binary code representation
+            $table->timestamps();  // Created at, Updated at
+        });
     }
 
     public function down()
     {
-        // Use config() to get the database credentials
-        $host = config('database.connections.mysql.host');
-        $username = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
-        $database = config('database.connections.mysql.database');
-
-        // Initialize MySQLi connection
-        $mysqli = new \mysqli($host, $username, $password, $database);
-
-        // Drop the COSIM function and the table
-        try {
-            $mysqli->query("DROP FUNCTION IF EXISTS COSIM");
-            $mysqli->query("DROP TABLE IF EXISTS my_vector_table");
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to drop the table or function: ' . $e->getMessage());
-        }
-
-        // Close the MySQLi connection
-        $mysqli->close();
+        Schema::dropIfExists('vectors');
     }
-};
+}
+

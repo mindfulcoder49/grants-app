@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\VectorController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Centroid;
+use App\Models\Vector;
+use Illuminate\Support\Facades\DB;
+
 
 class GrantsController extends Controller
 {
@@ -27,6 +31,8 @@ class GrantsController extends Controller
         // Validate the input
         $request->validate([
             'description' => 'string|nullable',
+            'search_type' => 'string|required',
+            'top_centroids' => 'integer',
         ]);
 
         // Log the incoming search request
@@ -46,8 +52,11 @@ class GrantsController extends Controller
         Log::info('Searching with term: ' . $searchTerm);
 
         try {
-            // Perform vector search
-            $results = $this->vectorSearch($searchTerm);
+            if ($request->input('search_type') === 'centroid') {
+                $results = $this->centroidSearch($searchTerm, $request->input('top_centroids', 5), 'text');
+            } else {
+                $results = $this->vectorSearch($searchTerm, 2000, 'text');
+            }
         } catch (\Exception $e) {
             // Log the exception if vector search fails
             Log::error('Vector search failed.', ['error' => $e->getMessage()]);
@@ -67,7 +76,7 @@ class GrantsController extends Controller
     /**
      * Perform a vector-based search using the embedded search term and return grants with similarity scores.
      */
-    public function vectorSearch($searchTerm)
+    public function vectorSearch($searchTerm, $topN, $inputType = 'text')
     {
         try {
             // Step 1: Embed the search term into a vector
@@ -80,7 +89,7 @@ class GrantsController extends Controller
             Log::info('Searching for similar vectors.');
             $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
                 'vector' => $embedding,
-                'topN' => 20
+                'topN' => $topN,
             ]));
             Log::info('Similar vector search successful.');
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
@@ -127,6 +136,145 @@ class GrantsController extends Controller
 
 
         return $grants;
+    }
+
+    public function centroidSearch($grantName, $topN = 5, $inputType = 'text')
+    {
+        try {
+            if ($inputType === 'text') {
+
+                // Step 1: Embed the grant name (description) into a vector using the local CLIP API
+                Log::info('Embedding the description into a vector.');
+                $embeddingResponse = $this->vectorController->embedText(new Request(['texts' => [$grantName]]));
+        
+                if (empty($embeddingResponse)) {
+                    throw new \Exception("Embedding for grant '{$grantName}' failed.");
+                }
+        
+                $embedding = $embeddingResponse->getData()->embeddings[0];
+                Log::info('Embedding successful.');
+            } else if ($inputType === 'embedding') {
+                $embedding = $grantName;
+            } else {
+                throw new \Exception("Invalid input type: {$inputType}");
+            }
+    
+            // Step 2: Find the top N closest centroids to the embedded vector
+            Log::info("Finding the top {$topN} closest centroids.");
+            $closestCentroids = $this->findClosestCentroids($embedding, $topN);
+    
+            if (empty($closestCentroids)) {
+                throw new \Exception("No centroids found for the vector.");
+            }
+    
+            Log::info("Top {$topN} closest centroids found: " . implode(', ', array_column($closestCentroids, 'id')));
+    
+            // Step 3: Retrieve vectors assigned to these centroids and perform a similarity search
+            Log::info("Fetching vectors associated with top {$topN} centroids.");
+            $vectorsInCentroids = DB::table('grant_vector')
+                ->join('vectors', 'grant_vector.vector_id', '=', 'vectors.id')
+                ->whereIn('grant_vector.centroid_id', array_column($closestCentroids, 'id'))
+                ->select('vectors.*', 'grant_vector.grant_id')
+                ->get();
+    
+            if ($vectorsInCentroids->isEmpty()) {
+                Log::warning("No vectors found for the top {$topN} centroids.");
+                return collect();
+            }
+            Log::info('Found vectors in the top centroids.', ['count' => $vectorsInCentroids->count()]);
+    
+            // Step 4: Perform cosine similarity between the embedded vector and the centroid's vectors
+            Log::info('Performing similarity search within the top centroids.');
+            $similarVectors = $this->calculateSimilarities($embedding, $vectorsInCentroids);
+    
+            // Step 5: Extract vector IDs and similarities
+            Log::info('Extracting vector IDs and similarities.');
+            $vectorIds = array_column($similarVectors, 'id');
+            $vectorSimilarityMap = array_combine(
+                array_column($similarVectors, 'id'),
+                array_column($similarVectors, 'similarity')
+            );
+    
+            // Step 6: Fetch the grants related to the similar vectors
+            Log::info('Fetching grants related to similar vectors.');
+            $grants = Grant::join('grant_vector', 'grants.id', '=', 'grant_vector.grant_id')
+                ->whereIn('grant_vector.vector_id', $vectorIds)
+                ->select('grants.*', 'grant_vector.vector_id')
+                ->get();
+    
+            Log::info('Fetched grants.', ['count' => $grants->count()]);
+    
+            // Step 7: Add similarity to each grant and sort by the original order of vector IDs
+            Log::info('Adding similarity scores to grants and sorting by vector order.');
+            $grants = $grants->map(function ($grant) use ($vectorSimilarityMap) {
+                $grant->similarity = $vectorSimilarityMap[$grant->vector_id] ?? 0;
+                return $grant;
+            });
+    
+            // Maintain the order of vector IDs from searchSimilarVectors
+            $vectorIdOrder = array_flip($vectorIds); // Create an array where vector_id is the key and its position is the value
+    
+            // Sort grants by the order of vector IDs as returned by searchSimilarVectors
+            $grants = $grants->sort(function ($a, $b) use ($vectorIdOrder) {
+                return $vectorIdOrder[$a->vector_id] <=> $vectorIdOrder[$b->vector_id];
+            });
+    
+            Log::info('grants sorted by vector order.', ['count' => $grants->count()]);
+    
+            return $grants;
+    
+        } catch (\Exception $e) {
+            // Log the exception if anything goes wrong
+            Log::error('Error in vector search.', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Find the top N closest centroids to the given vector.
+     */
+    private function findClosestCentroids($vector, $topN)
+    {
+        $centroids = Centroid::all();
+        $centroidDistances = [];
+    
+        foreach ($centroids as $centroid) {
+            $distance = Vector::cosineSimilarity($vector, $centroid->vector);
+            $centroidDistances[] = [
+                'id' => $centroid->id,
+                'distance' => $distance
+            ];
+        }
+    
+        // Sort centroids by distance (lower distance is closer)
+        usort($centroidDistances, fn($a, $b) => $b['distance'] <=> $a['distance']);
+    
+        // Return the top N closest centroids
+        return array_slice($centroidDistances, 0, $topN);
+    }
+    
+
+    /**
+     * Calculate similarities between the query vector and the vectors in the centroid.
+     */
+    private function calculateSimilarities($queryVector, $vectorsInCentroid)
+    {
+        $similarVectors = [];
+
+        foreach ($vectorsInCentroid as $vectorRecord) {
+            $vector = json_decode($vectorRecord->vector, true); // Convert JSON string to array
+            $similarity = Vector::cosineSimilarity($queryVector, $vector);
+
+            $similarVectors[] = [
+                'id' => $vectorRecord->id,
+                'similarity' => $similarity
+            ];
+        }
+
+        // Sort by similarity (higher is more similar)
+        usort($similarVectors, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+
+        return $similarVectors;
     }
 
     /**

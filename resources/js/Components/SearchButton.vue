@@ -15,8 +15,14 @@
     },
     methods: {
       searchGrants() {
+        const searchPayload = {
+          description: this.companyDescription,
+          search_type: "centroid",
+          top_centroids: 50,
+        };
+
         // Emit search event with data directly from prop
-        this.$emit('search', this.companyDescription);
+        this.$emit('search', searchPayload);
       },
     },
   };
