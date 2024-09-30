@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Console\Commands\DownloadGrantsXML;  
+use App\Console\Commands\DownloadGrantsXML;  
 
 class DatabaseSeeder extends Seeder
 {
