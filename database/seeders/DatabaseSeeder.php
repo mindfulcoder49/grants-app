@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Console\Commands\DownloadGrantsXML;  
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        //run custom command grants:download-xml
+        $this->call([
+            DownloadGrantsXML::class,
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        //Chain other seeders together
+        $this->call([
+            GrantsTableSeeder::class,
+            GrantVectorSeeder::class,
+            CentroidSeeder::class,
+            AssignVectorsToCentroidsSeeder::class,
         ]);
     }
 }
