@@ -24,8 +24,11 @@ class GrantVectorSeeder extends Seeder
         // Fetch all grants from the database
         $grants = DB::table('grants')->get();
 
-        foreach ($grants as $grant) {
-            Log::info("Processing grant: Opportunity ID - " . $grant->opportunity_id);
+        //count the number of grants
+        $grantCount = count($grants);
+
+        foreach ($grants as $index=>$grant) {
+            Log::info("Processing grant: " . $index . " of " . $grantCount . " Opportunity ID - " . $grant->opportunity_id);
 
             // Check if a vector entry exists in the pivot table for this grant and opportunity ID
             $existingVectorEntry = DB::table('grant_vector')
