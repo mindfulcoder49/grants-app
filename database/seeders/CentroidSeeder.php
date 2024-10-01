@@ -13,27 +13,27 @@ class CentroidSeeder extends Seeder
 
     public function run()
     {
-        Log::info('Starting Centroid Seeder: Fetching vectors from database in chunks.');
+        Log::info('Starting Centroid Seeder: Fetching normalized vectors from database');
 
-        $vectorCount = Vector::count();
-        $chunkSize = 1000;  // Adjust based on memory constraints
-        $allCentroids = [];
+        // Step 1: Get all normalized vectors from the Vector table
+        $vectors = Vector::all()->pluck('normalized_vector')->toArray();
+        $vectorCount = count($vectors);
 
-        Log::info("Total vector count: {$vectorCount}");
+        Log::info("Fetched {$vectorCount} normalized vectors from database.");
 
-        // Step 1: Initialize or resume k-means algorithm
+        // Step 2: Initialize or resume k-means algorithm
+        Log::info("Running k-means algorithm with {$this->numCentroids} centroids.");
+        
+        // If centroids already exist in the DB, use them to resume
         $existingCentroids = Centroid::all()->pluck('vector')->toArray();
-        $centroids = count($existingCentroids) > 0 ? $existingCentroids : $this->initializeCentroids($vectorCount, $this->numCentroids);
+        $centroids = count($existingCentroids) > 0 ? $existingCentroids : $this->initializeCentroids($vectors, $this->numCentroids);
 
-        // Step 2: Fetch vectors in chunks and perform k-means clustering
-        Vector::chunk($chunkSize, function ($vectors) use (&$centroids, &$allCentroids) {
-            $vectorArray = $vectors->pluck('vector')->toArray();
-            $this->kMeans($vectorArray, $centroids, $this->numCentroids);
+        // Step 3: Perform k-means clustering, save centroids after each iteration
+        $this->kMeans($vectors, $centroids, $this->numCentroids);
 
-            // Trigger garbage collection after each chunk
-            unset($vectorArray);
-            gc_collect_cycles();
-        });
+        // Free memory after processing
+        unset($vectors, $centroids);
+        gc_collect_cycles();
 
         Log::info('Centroid Seeder completed successfully.');
     }
@@ -41,20 +41,16 @@ class CentroidSeeder extends Seeder
     /**
      * Initialize centroids randomly from the existing vectors
      */
-    private function initializeCentroids(int $vectorCount, int $k)
+    private function initializeCentroids(array $vectors, int $k)
     {
         Log::info("Initializing centroids randomly.");
-
-        // Fetch random centroids
-        $centroids = Vector::inRandomOrder()->take($k)->pluck('vector')->toArray();
-        
-        return $centroids;
+        return array_map(fn($i) => $vectors[array_rand($vectors)], range(0, $k - 1));
     }
 
     /**
      * K-means clustering algorithm to find centroids, saving after each iteration
      */
-    private function kMeans(array $vectors, array &$centroids, int $k, int $maxIterations = 100)
+    private function kMeans(array $vectors, array $centroids, int $k, int $maxIterations = 100)
     {
         $previousCentroids = [];
 
@@ -88,6 +84,10 @@ class CentroidSeeder extends Seeder
                 Log::info("Centroids converged with metric {$convergenceMetric} after {$iteration} iterations.");
                 break;
             }
+
+            // Free memory for each iteration to avoid large memory footprints
+            unset($clusters);
+            gc_collect_cycles();
         }
     }
 
@@ -111,7 +111,7 @@ class CentroidSeeder extends Seeder
     }
 
     /**
-     * Find the index of the closest centroid to the given vector
+     * Find the index of the closest centroid to the given vector using cosine similarity
      */
     private function findClosestCentroid(array $vector, array $centroids)
     {
