@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Vector; // Use the new Vector model
-use MHz\MysqlVector\Nlp\Embedder;
+use App\Http\Controllers\VectorController;
 
 class GrantVectorSeeder extends Seeder
 {
@@ -44,7 +44,7 @@ class GrantVectorSeeder extends Seeder
 
                 try {
                     // Create embeddings using the embedText function of the Embedder class
-                    $embedding = $this->embedder->embed([$textToEmbed]);
+                    $embedding = VectorController::embed($textToEmbed);
                 } catch (\Exception $e) {
                     Log::error("Failed to generate embedding for grant: Opportunity ID - " . $grant->opportunity_id);
                     continue;
