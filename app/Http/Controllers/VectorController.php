@@ -11,6 +11,7 @@ use App\Models\Grant;
 use GuzzleHttp\Client;
 
 
+
 class VectorController extends Controller
 {
     protected $dimension;
@@ -234,6 +235,7 @@ class VectorController extends Controller
         $responseBody = json_decode($response->getBody(), true);
 
         if (isset($responseBody['error'])) {
+            Log::error('OpenAI API error: ' . $responseBody['error']['message']);
             throw new \Exception('OpenAI API error: ' . $responseBody['error']['message']);
         }
 

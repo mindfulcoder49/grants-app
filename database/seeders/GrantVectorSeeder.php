@@ -2,132 +2,183 @@
 
 namespace Database\Seeders;
 
+use App\Models\Vector;
+use App\Models\Centroid;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Vector; // Use the new Vector model
-use App\Http\Controllers\VectorController;
 
-class GrantVectorSeeder extends Seeder
+class CentroidSeeder extends Seeder
 {
-    protected $embedder;
-
-    public function __construct()
-    {
-        $this->embedder = new VectorController();
-    }
+    protected $numCentroids = 200;  // Number of centroids to find
 
     public function run()
     {
-        Log::info('Starting the GrantVectorSeeder.');
+        Log::info('Starting Centroid Seeder: Fetching normalized vectors from database');
 
-        // Fetch all grants from the database
-        $grants = DB::table('grants')->get();
+        // Step 1: Get all normalized vectors from the Vector table
+        $vectors = Vector::all()->pluck('normalized_vector')->toArray();
+        $vectorCount = count($vectors);
 
-        //count the number of grants
-        $grantCount = count($grants);
+        Log::info("Fetched {$vectorCount} normalized vectors from database.");
 
-        foreach ($grants as $index=>$grant) {
-            Log::info("Processing grant: " . $index . " of " . $grantCount . " Opportunity ID - " . $grant->opportunity_id);
+        // Step 2: Initialize or resume k-means algorithm
+        Log::info("Running k-means algorithm with {$this->numCentroids} centroids.");
+        
+        // If centroids already exist in the DB, use them to resume
+        $existingCentroids = Centroid::all()->pluck('vector')->toArray();
+        $centroids = count($existingCentroids) > 0 ? $existingCentroids : $this->initializeCentroids($vectors, $this->numCentroids);
 
-            // Check if a vector entry exists in the pivot table for this grant and opportunity ID
-            $existingVectorEntry = DB::table('grant_vector')
-                ->where('grant_id', $grant->id)
-                ->where('opportunity_id', $grant->opportunity_id)
-                ->exists();
+        // Step 3: Perform k-means clustering, save centroids after each iteration
+        $this->kMeans($vectors, $centroids, $this->numCentroids);
 
-            if (!$existingVectorEntry) {
-                Log::info("No vector found for grant: Opportunity ID - " . $grant->opportunity_id);
+        // Free memory after processing
+        unset($vectors, $centroids);
+        gc_collect_cycles();
 
-                // Prepare the text to be embedded (you can use relevant fields such as title, description, etc.)
-                $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
-                $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
-                $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+        Log::info('Centroid Seeder completed successfully.');
+    }
 
-                try {
-                    // Create embeddings using the embedText function of the Embedder class
-                    $embedding = $this->embedder->embed($textToEmbed);
-                } catch (\Exception $e) {
-                    Log::error("Failed to generate embedding for grant: Opportunity ID - " . $grant->opportunity_id);
-                    continue;
+    /**
+     * Initialize centroids randomly from the existing vectors
+     */
+    private function initializeCentroids(array $vectors, int $k)
+    {
+        Log::info("Initializing centroids randomly.");
+        return array_map(fn($i) => $vectors[array_rand($vectors)], range(0, $k - 1));
+    }
+
+    /**
+     * K-means clustering algorithm to find centroids, saving after each iteration
+     */
+    private function kMeans(array $vectors, array $centroids, int $k, int $maxIterations = 100)
+    {
+        $previousCentroids = [];
+
+        for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
+            Log::info("K-means iteration {$iteration} started.");
+
+            // Step 1: Assign each vector to the closest centroid
+            $clusters = array_fill(0, $k, []);
+            foreach ($vectors as $vector) {
+                $closestIndex = $this->findClosestCentroid($vector, $centroids);
+                $clusters[$closestIndex][] = $vector;
+            }
+
+            // Step 2: Recalculate the centroids of each cluster
+            $previousCentroids = $centroids;
+            foreach ($clusters as $index => $cluster) {
+                if (count($cluster) > 0) {
+                    $centroids[$index] = $this->calculateCentroid($cluster);
+                    Log::info("Centroid {$index} recalculated.");
                 }
+            }
 
-                // Normalize and insert the vector using the Vector model
-                $vectorData = $embedding[0];
-                $normalizedVector = Vector::normalize($vectorData);
-                $magnitude = Vector::getMagnitude($normalizedVector);
-                $binaryCode = Vector::vectorToBinary($normalizedVector);
+            // Step 3: Save centroids after each iteration
+            $this->saveCentroids($centroids);
 
-                // Create a new vector entry in the database
-                $vectorModel = Vector::create([
-                    'vector' => $vectorData,
-                    'normalized_vector' => $normalizedVector,
-                    'magnitude' => $magnitude,
-                    'binary_code' => $binaryCode,
-                ]);
+            // Step 4: Check if centroids have converged
+            $convergenceMetric = $this->calculateConvergenceMetric($centroids, $previousCentroids);
+            Log::info("Convergence metric (SSD): {$convergenceMetric}");
 
-                // Insert the pivot table entry with the grant ID, vector ID, and opportunity ID
-                DB::table('grant_vector')->insert([
-                    'grant_id' => $grant->id,
-                    'vector_id' => $vectorModel->id,
-                    'opportunity_id' => $grant->opportunity_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            if ($convergenceMetric < 0.001) {
+                Log::info("Centroids converged with metric {$convergenceMetric} after {$iteration} iterations.");
+                break;
+            }
 
-                Log::info("Inserted vector for grant: Opportunity ID - " . $grant->opportunity_id);
+            // Free memory for each iteration to avoid large memory footprints
+            unset($clusters);
+            gc_collect_cycles();
+        }
+    }
+
+    /**
+     * Save centroids to the database
+     */
+    private function saveCentroids(array $centroids)
+    {
+        foreach ($centroids as $index => $centroid) {
+            // Check if centroid already exists, update or create new entry
+            $existingCentroid = Centroid::find($index + 1); // Assuming ID is 1-based
+
+            if ($existingCentroid) {
+                $existingCentroid->update(['vector' => $centroid]);
+                Log::info("Updated Centroid {$index} in the database.");
             } else {
-                Log::info("Vector already exists for grant: Opportunity ID - " . $grant->opportunity_id);
-                //Check if the vector is older than the grant based on the updated_at field
-                //If so, update the vector with the latest embedding
-                //You can use the Vector model to update the vector
+                Centroid::create(['vector' => $centroid]);
+                Log::info("Created Centroid {$index} in the database.");
+            }
+        }
+    }
 
-                // Fetch the existing vector entry for this grant
-                $existingVectorEntry = DB::table('grant_vector')
-                ->where('grant_id', $grant->id)
-                ->where('opportunity_id', $grant->opportunity_id)
-                ->first();
+    /**
+     * Find the index of the closest centroid to the given vector using cosine similarity
+     */
+    private function findClosestCentroid(array $vector, array $centroids)
+    {
+        $bestDistance = PHP_FLOAT_MAX;
+        $bestIndex = 0;
 
-                $vectorModel = Vector::find($existingVectorEntry->vector_id);
-
-                if ($vectorModel) {
-                    // Compare the updated_at fields of the vector and the grant
-                    if ($vectorModel->updated_at < $grant->updated_at) {
-                        Log::info("Vector is older than the grant. Updating vector for grant: Opportunity ID - " . $grant->opportunity_id);
-            
-                        // Prepare the text to be embedded
-                        $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
-                        $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
-                        $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
-            
-                        // Create embeddings using the embedText function of the Embedder class
-                        $embedding = $this->embedder->embed([$textToEmbed]);
-            
-                        // Ensure we have a valid embedding
-                        if (empty($embedding) || !is_array($embedding[0])) {
-                            Log::error("Failed to generate embedding for grant: Opportunity ID - " . $grant->opportunity_id);
-                            return;
-                        }
-            
-                        // Update the existing vector model with new embedding data
-                        $vectorModel->update([
-                            'vector' => $embedding[0],
-                            'normalized_vector' => Vector::normalize($embedding[0]),
-                            'magnitude' => Vector::getMagnitude(Vector::normalize($embedding[0])),
-                            'binary_code' => Vector::vectorToBinary(Vector::normalize($embedding[0])),
-                            'updated_at' => now(), // Update the timestamp
-                        ]);
-            
-                        Log::info("Updated vector for grant: Opportunity ID - " . $grant->opportunity_id);
-                    } else {
-                        Log::info("Vector is up to date for grant: Opportunity ID - " . $grant->opportunity_id);
-                    }
-                } else {
-                    Log::error("Vector entry not found for grant: Opportunity ID - " . $grant->opportunity_id);
-                }
+        foreach ($centroids as $index => $centroid) {
+            $distance = $this->cosineSimilarity($vector, $centroid);
+            if ($distance < $bestDistance) {
+                $bestDistance = $distance;
+                $bestIndex = $index;
             }
         }
 
-        Log::info("Finished processing grants for vector embeddings.");
+        return $bestIndex;
+    }
+
+    /**
+     * Calculate the centroid of a given cluster of vectors
+     */
+    private function calculateCentroid(array $vectors)
+    {
+        $centroid = [];
+        $numVectors = count($vectors);
+        $numDimensions = count($vectors[0]);
+
+        for ($i = 0; $i < $numDimensions; $i++) {
+            $sum = 0;
+            foreach ($vectors as $vector) {
+                $sum += $vector[$i];
+            }
+            $centroid[] = $sum / $numVectors;
+        }
+
+        return $centroid;
+    }
+
+    /**
+     * Calculate the convergence metric (sum of squared differences between centroids)
+     */
+    private function calculateConvergenceMetric(array $centroids, array $previousCentroids)
+    {
+        $sumSquaredDifference = 0;
+
+        for ($i = 0; $i < count($centroids); $i++) {
+            for ($j = 0; $j < count($centroids[$i]); $j++) {
+                $difference = $centroids[$i][$j] - $previousCentroids[$i][$j];
+                $sumSquaredDifference += $difference * $difference;
+            }
+        }
+
+        return $sumSquaredDifference;
+    }
+
+    /**
+     * Cosine similarity function (1 - cosine similarity is used as distance)
+     */
+    private function cosineSimilarity($vectorA, $vectorB)
+    {
+        $dotProduct = array_sum(array_map(fn($a, $b) => $a * $b, $vectorA, $vectorB));
+        $magnitudeA = sqrt(array_sum(array_map(fn($a) => $a * $a, $vectorA)));
+        $magnitudeB = sqrt(array_sum(array_map(fn($b) => $b * $b, $vectorB)));
+
+        if ($magnitudeA == 0 || $magnitudeB == 0) {
+            return PHP_FLOAT_MAX;
+        }
+
+        return 1 - ($dotProduct / ($magnitudeA * $magnitudeB));
     }
 }
