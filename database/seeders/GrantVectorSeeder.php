@@ -14,8 +14,7 @@ class GrantVectorSeeder extends Seeder
 
     public function __construct()
     {
-        // Initialize Embedder for text embedding
-        $this->embedder = new Embedder();
+        $this->embedder = new VectorController();
     }
 
     public function run()
@@ -44,7 +43,7 @@ class GrantVectorSeeder extends Seeder
 
                 try {
                     // Create embeddings using the embedText function of the Embedder class
-                    $embedding = VectorController::embed($textToEmbed);
+                    $embedding = $this->embedder->embed($textToEmbed);
                 } catch (\Exception $e) {
                     Log::error("Failed to generate embedding for grant: Opportunity ID - " . $grant->opportunity_id);
                     continue;

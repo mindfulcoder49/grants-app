@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         //Chain other seeders together
         $this->call([
-            GrantsTableSeeder::class,
+            //GrantsTableSeeder::class,
             GrantVectorSeeder::class,
             CentroidSeeder::class,
             AssignVectorsToCentroidsSeeder::class,
