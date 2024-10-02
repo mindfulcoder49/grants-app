@@ -56,60 +56,52 @@ class GrantsTableSeeder extends Seeder
 
         Log::info("Found " . count($grants) . " grants to seed.");
 
-        // Convert the grants to an array
+        // Convert the grants to an array and reverse it
         $grantsArray = [];
         foreach ($grants as $grant) {
             $grantsArray[] = $grant;
         }
-
-        // Reverse the array
         $reversedGrants = array_reverse($grantsArray);
 
         $counter = 0;
-        $chunkSize = 100;
-        $chunk = [];
+        $batchSize = 500;  // Process in batches of 50
+        $batch = [];
 
         foreach ($reversedGrants as $grant) {
             $counter++;
-            $chunk[] = $grant;
+            $batch[] = $this->prepareGrantData($grant);  // Prepare grant data for batch upsert
 
-            // Process when chunk reaches the defined size
-            if (count($chunk) == $chunkSize) {
-                $this->processChunk($chunk, $counter);
-                $chunk = []; // Reset chunk array
+            // Process when batch reaches the defined size
+            if (count($batch) == $batchSize) {
+                $this->upsertBatch($batch);
+                $batch = []; // Reset batch array
 
                 // Trigger garbage collection
                 gc_collect_cycles();
             }
         }
 
-        // Process any remaining grants in the last chunk
-        if (count($chunk) > 0) {
-            $this->processChunk($chunk, $counter);
+        // Process any remaining grants in the last batch
+        if (count($batch) > 0) {
+            $this->upsertBatch($batch);
         }
-
 
         Log::info("Finished processing $counter grants.");
         $this->command->info("Finished processing $counter grants.");
     }
 
-    private function processChunk($grantChunk, $counter)
-    {
-        foreach ($grantChunk as $grant) {
-            Log::debug("Processing grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
-            $this->processGrant($grant, $counter);
-        }
-    }
-
-    private function processGrant($grant, $counter)
+    /**
+     * Prepares grant data for batch upsert.
+     */
+    private function prepareGrantData($grant)
     {
         // Convert dates from MMDDYYYY to Y-m-d
         $post_date = DateTime::createFromFormat('mdY', (string)$grant->PostDate)->format('Y-m-d');
         $close_date = (string)$grant->CloseDate ? DateTime::createFromFormat('mdY', (string)$grant->CloseDate)->format('Y-m-d') : null;
         $last_updated_or_created_date = DateTime::createFromFormat('mdY', (string)$grant->LastUpdatedDate)->format('Y-m-d');
 
-        // Data array for the current grant
-        $grantData = [
+        // Prepare the data array for this grant
+        return [
             'opportunity_title' => html_entity_decode((string)$grant->OpportunityTitle, ENT_QUOTES | ENT_HTML5),
             'opportunity_id' => html_entity_decode((string)$grant->OpportunityID, ENT_QUOTES | ENT_HTML5),
             'opportunity_number' => html_entity_decode((string)$grant->OpportunityNumber, ENT_QUOTES | ENT_HTML5),
@@ -137,41 +129,25 @@ class GrantsTableSeeder extends Seeder
             'grantor_contact_text' => html_entity_decode((string)$grant->GrantorContactText ?? null, ENT_QUOTES | ENT_HTML5),
             'version' => html_entity_decode((string)$grant->Version, ENT_QUOTES | ENT_HTML5),
             'updated_at' => now(),
+            'created_at' => now(),
         ];
+    }
 
-        // Check if the grant exists based on the unique Opportunity ID
-        $existingGrant = DB::table('grants')->where('opportunity_id', (string)$grant->OpportunityID)->first();
+    /**
+     * Upserts a batch of grants into the database.
+     */
+    private function upsertBatch(array $batch)
+    {
+        // Perform a batch upsert into the 'grants' table
+        DB::table('grants')->upsert($batch, ['opportunity_id'], [
+            'opportunity_title', 'opportunity_number', 'opportunity_category', 'opportunity_category_explanation',
+            'funding_instrument_type', 'category_of_funding_activity', 'cfda_number', 'eligible_applicants',
+            'additional_information_on_eligibility', 'agency_code', 'agency_name', 'post_date', 'close_date',
+            'last_updated_or_created_date', 'award_ceiling', 'award_floor', 'estimated_total_program_funding',
+            'expected_number_of_awards', 'description', 'cost_sharing_requirement', 'additional_information_url',
+            'grantor_contact_email', 'grantor_contact_email_description', 'grantor_contact_text', 'version', 'updated_at'
+        ]);
 
-        if ($existingGrant) {
-            // Check for changes
-            $hasChanged = false;
-            foreach ($grantData as $key => $value) {
-                if ($key == 'created_at' || $key == 'updated_at') {
-                    continue;
-                }
-                if ($existingGrant->$key != $value) {
-                    Log::info("Data has changed for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID . " - Field: $key");
-                    $hasChanged = true;
-                    break;
-                }
-            }
-
-            if ($hasChanged) {
-                // Update the existing record
-                DB::table('grants')
-                    ->where('id', $existingGrant->id)
-                    ->update(array_merge($grantData, ['created_at' => $existingGrant->created_at]));  // Preserve created_at
-                Log::info("Updated grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
-            } else {
-                Log::debug("No changes for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
-            }
-        } else {
-            // Insert the new grant record
-            DB::table('grants')->insert(array_merge($grantData, ['created_at' => now()]));
-            Log::info("Inserted new grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
-        }
-
-        // Free memory by unsetting the variables
-        unset($grantData, $existingGrant);
+        Log::info("Upserted a batch of " . count($batch) . " grants.");
     }
 }
