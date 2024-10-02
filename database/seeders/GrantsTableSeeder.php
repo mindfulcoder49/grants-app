@@ -11,7 +11,7 @@ class GrantsTableSeeder extends Seeder
 {
     public function run()
     {
-        Log::info('Starting to seed the grants table.');
+        Log::debug('Starting to seed the grants table.');
 
         // Get the latest XML file from the storage directory
         $directory = storage_path('app/grants/');
@@ -34,7 +34,7 @@ class GrantsTableSeeder extends Seeder
         // Load the XML file
         $xml = simplexml_load_file($latestXMLFile);
 
-        Log::info('Loaded the XML file: ' . $latestXMLFile);
+        Log::debug('Loaded the XML file: ' . $latestXMLFile);
 
         // Ensure the XML is loaded correctly
         if ($xml === false) {
@@ -50,17 +50,25 @@ class GrantsTableSeeder extends Seeder
 
         // Ensure grants are found
         if (count($grants) == 0) {
-            Log::info('No grants found in the XML file.');
+            Log::debug('No grants found in the XML file.');
             return;
         }
 
         Log::info("Found " . count($grants) . " grants to seed.");
 
+        // Convert grants to an array and reverse it
+        $grantsArray = iterator_to_array($grants);
+        $reversedGrants = array_reverse($grantsArray);
+
         $counter = 0;
         $chunkSize = 100;
         $chunk = [];
 
-        foreach ($grants as $grant) {
+        $counter = 0;
+        $chunkSize = 100;
+        $chunk = [];
+
+        foreach ($reversedGrants as $grant) {
             $counter++;
             $chunk[] = $grant;
 
@@ -86,7 +94,7 @@ class GrantsTableSeeder extends Seeder
     private function processChunk($grantChunk, $counter)
     {
         foreach ($grantChunk as $grant) {
-            Log::info("Processing grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
+            Log::debug("Processing grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
             $this->processGrant($grant, $counter);
         }
     }
@@ -153,7 +161,7 @@ class GrantsTableSeeder extends Seeder
                     ->update(array_merge($grantData, ['created_at' => $existingGrant->created_at]));  // Preserve created_at
                 Log::info("Updated grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
             } else {
-                Log::info("No changes for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
+                Log::debug("No changes for grant #$counter: Opportunity ID - " . (string)$grant->OpportunityID);
             }
         } else {
             // Insert the new grant record
