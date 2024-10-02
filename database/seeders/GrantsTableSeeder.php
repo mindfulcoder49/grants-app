@@ -56,13 +56,14 @@ class GrantsTableSeeder extends Seeder
 
         Log::info("Found " . count($grants) . " grants to seed.");
 
-        // Convert grants to an array and reverse it
-        $grantsArray = iterator_to_array($grants);
-        $reversedGrants = array_reverse($grantsArray);
+        // Convert the grants to an array
+        $grantsArray = [];
+        foreach ($grants as $grant) {
+            $grantsArray[] = $grant;
+        }
 
-        $counter = 0;
-        $chunkSize = 100;
-        $chunk = [];
+        // Reverse the array
+        $reversedGrants = array_reverse($grantsArray);
 
         $counter = 0;
         $chunkSize = 100;
@@ -86,6 +87,7 @@ class GrantsTableSeeder extends Seeder
         if (count($chunk) > 0) {
             $this->processChunk($chunk, $counter);
         }
+
 
         Log::info("Finished processing $counter grants.");
         $this->command->info("Finished processing $counter grants.");
