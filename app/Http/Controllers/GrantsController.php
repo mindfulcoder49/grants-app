@@ -10,6 +10,7 @@ use App\Http\Controllers\VectorController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Centroid;
+use App\Http\Controllers\CentroidController;
 use App\Models\Vector;
 use Illuminate\Support\Facades\DB;
 
@@ -125,16 +126,55 @@ class GrantsController extends Controller
     /**
      * Retrieve similar vectors based on the search type.
      */
-    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid')
+    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1)
     {
         if ($searchType === 'centroid') {
-            return $this->retrieveVectorsFromCentroids($embedding, $topN);
+            // Instantiate the CentroidController
+            $centroidController = new CentroidController();
+    
+            // Prepare the request data
+            $requestData = [
+                'vector'        => $embedding,
+                'top_centroids' => $top_centroids,
+                'topN'          => $topN,
+            ];
+    
+            // Add percentageToRefine if using hybrid search
+            if ($useHamming === 'hybrid') {
+                $requestData['percentageToRefine'] = $percentageToRefine;
+            }
+    
+            // Create a new Request instance
+            $request = new Request($requestData);
+    
+            // Call the appropriate search method based on $useHamming
+            switch ($useHamming) {
+                case 'cosine':
+                    $similarVectorsResponse = $centroidController->searchByCosineSimilarity($request);
+                    break;
+                case 'hamming':
+                    $similarVectorsResponse = $centroidController->searchByHammingDistance($request);
+                    break;
+                case 'hybrid':
+                    $similarVectorsResponse = $centroidController->searchHybrid($request);
+                    break;
+                default:
+                    // Default to hybrid search if $useHamming is not recognized
+                    $similarVectorsResponse = $centroidController->searchHybrid($request);
+            }
+    
+            // Extract similar vectors from the response
+            $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
+    
+            Log::info('Found similar vectors using centroid search.', ['count' => count($similarVectors)]);
+            return $similarVectors;
+    
         } else {
             // Direct vector search
             Log::info('Searching for similar vectors.');
             $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
-                'vector' => $embedding,
-                'topN'   => $topN,
+                'vector'     => $embedding,
+                'topN'       => $topN,
                 'useHamming' => $useHamming,
             ]));
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
@@ -142,42 +182,9 @@ class GrantsController extends Controller
             return $similarVectors;
         }
     }
+    
 
-    /**
-     * Retrieve vectors from centroids and calculate similarities.
-     */
-    private function retrieveVectorsFromCentroids($embedding, $topN)
-    {
-        // Step 1: Find the top N closest centroids to the embedded vector
-        Log::info("Finding the top {$topN} closest centroids.");
-        $closestCentroids = $this->findClosestCentroids($embedding, $topN);
 
-        if (empty($closestCentroids)) {
-            throw new \Exception("No centroids found for the vector.");
-        }
-
-        Log::info("Top {$topN} closest centroids found: " . implode(', ', array_column($closestCentroids, 'id')));
-
-        // Step 2: Retrieve vectors assigned to these centroids
-        Log::info("Fetching vectors associated with top {$topN} centroids.");
-        $vectorsInCentroids = DB::table('grant_vector')
-            ->join('vectors', 'grant_vector.vector_id', '=', 'vectors.id')
-            ->whereIn('grant_vector.centroid_id', array_column($closestCentroids, 'id'))
-            ->select('vectors.*', 'grant_vector.grant_id')
-            ->get();
-
-        if ($vectorsInCentroids->isEmpty()) {
-            Log::warning("No vectors found for the top {$topN} centroids.");
-            return [];
-        }
-        Log::info('Found vectors in the top centroids.', ['count' => $vectorsInCentroids->count()]);
-
-        // Step 3: Perform cosine similarity between the embedded vector and the centroid's vectors
-        Log::info('Performing similarity search within the top centroids.');
-        $similarVectors = $this->calculateSimilarities($embedding, $vectorsInCentroids);
-
-        return $similarVectors;
-    }
 
     /**
      * Fetch grants by vector IDs and assign similarity scores.
@@ -208,51 +215,7 @@ class GrantsController extends Controller
         return $grants;
     }
 
-    /**
-     * Find the top N closest centroids to the given vector.
-     */
-    private function findClosestCentroids($vector, $topN)
-    {
-        $centroids = Centroid::all();
-        $centroidDistances = [];
-
-        foreach ($centroids as $centroid) {
-            $distance = Vector::cosineSimilarity($vector, $centroid->vector);
-            $centroidDistances[] = [
-                'id'       => $centroid->id,
-                'distance' => $distance
-            ];
-        }
-
-        // Sort centroids by distance (higher similarity is closer)
-        usort($centroidDistances, fn($a, $b) => $b['distance'] <=> $a['distance']);
-
-        // Return the top N closest centroids
-        return array_slice($centroidDistances, 0, $topN);
-    }
-
-    /**
-     * Calculate similarities between the query vector and the vectors in the centroid.
-     */
-    private function calculateSimilarities($queryVector, $vectorsInCentroid)
-    {
-        $similarVectors = [];
-
-        foreach ($vectorsInCentroid as $vectorRecord) {
-            $vector = json_decode($vectorRecord->vector, true); // Convert JSON string to array
-            $similarity = Vector::cosineSimilarity($queryVector, $vector);
-
-            $similarVectors[] = [
-                'id'         => $vectorRecord->id,
-                'similarity' => $similarity
-            ];
-        }
-
-        // Sort by similarity (higher is more similar)
-        usort($similarVectors, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
-
-        return $similarVectors;
-    }
+    
 
     /**
      * Store the grant information for the logged-in user.
