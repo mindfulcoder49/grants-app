@@ -17,7 +17,7 @@ class AssignVectorsToCentroidsSeeder extends Seeder
         $centroids = Centroid::all();
 
         // Step 2: Process grant vectors in chunks to avoid memory overload
-        DB::table('grant_vector')->orderBy('id')->chunk(100, function ($grantVectorRecords) use ($centroids) {
+        DB::table('grant_vector')->orderBy('opportunity_id')->chunk(100, function ($grantVectorRecords) use ($centroids) {
             foreach ($grantVectorRecords as $grantVectorRecord) {
                 // Fetch the vector data
                 $vector = Vector::find($grantVectorRecord->vector_id);
