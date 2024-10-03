@@ -40,7 +40,6 @@ class GrantVectorSeeder extends Seeder
 
         // Check if a vector entry exists for this grant
         $existingVectorEntry = DB::table('grant_vector')
-            ->where('grant_id', $grant->id)
             ->where('opportunity_id', $grant->opportunity_id)
             ->exists();
 
