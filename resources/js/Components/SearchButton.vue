@@ -20,12 +20,12 @@
         </div>
 
         <!-- Top Centroids Section -->
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4" v-show="search_type === 'centroid'">
           <label for="top_centroids" class="font-medium">Top Centroids (1-200):</label>
           <input type="number" id="top_centroids" name="top_centroids" v-model="top_centroids" min="1" max="200" class="form-input w-24 border border-gray-300 rounded-md">
         </div>
         <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid-->
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4" v-show="search_type === 'vector'">
           <label for="hamming_mode" class="font-medium">Hamming Mode:</label>
           <div id="hamming_mode" class="flex items-center space-x-4">
             <label for="cosine"  class="border border-gray-600 rounded-md space-x-4 p-2">
@@ -63,7 +63,7 @@
     data() {
       return {
         search_type: 'centroid', // Default search type
-        top_centroids: 50, // Default top centroids
+        top_centroids: 5, // Default top centroids
         hamming_mode: 'hybrid', // Default hamming mode
       };
     },
