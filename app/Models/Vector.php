@@ -64,7 +64,7 @@ class Vector extends Model
         return $dotProduct / (sqrt($magnitudeA) * sqrt($magnitudeB));
     }
 
-    // Search for similar vectors
+    /* Search for similar vectors
     public static function search(array $vector, int $topN = 10): array
     {
         $normalizedVector = self::normalize($vector);
@@ -84,7 +84,43 @@ class Vector extends Model
         usort($results, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
 
         return array_slice($results, 0, $topN);
+    } */
+
+    
+    public static function search(array $vector, int $topN = 10, float $percentageToRefine = 1, int $chunkSize = 1000): array
+    {
+        // Normalize input vector and convert it to binary
+        $normalizedVector = self::normalize($vector);
+        $binaryVector = self::vectorToBinary($normalizedVector);
+
+        // Step 1: Perform the Hamming distance-based search
+        $hammingResults = self::hammingSearch($binaryVector, $topN, $chunkSize);
+
+        // Step 2: Determine the number of closest matches to perform cosine similarity on
+        $numCosineChecks = max(1, floor($topN * $percentageToRefine));
+
+        $cosineResults = [];
+
+        // Step 3: Perform cosine similarity on the top N percentage
+        foreach (array_slice($hammingResults, 0, $numCosineChecks) as $result) {
+            $vectorData = self::find($result['id']); // Fetch the full vector data for cosine similarity
+            $storedNormalizedVector = $vectorData->normalized_vector;
+            $similarity = self::cosineSimilarity($normalizedVector, $storedNormalizedVector);
+
+            $cosineResults[] = [
+                'id' => $vectorData->id,
+                'similarity' => $similarity,
+                'vector' => $vectorData->vector,
+            ];
+        }
+
+        // Sort the refined cosine results by similarity
+        usort($cosineResults, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+
+        // Return the refined topN cosine similarity results
+        return array_slice($cosineResults, 0, $topN);
     }
+        
 
     // Magnitude calculation
     public static function getMagnitude(array $vector): float
@@ -136,4 +172,68 @@ class Vector extends Model
 
         return $binary;
     }
+
+    // Hamming distance calculation between two binary strings
+    public static function hammingDistance(string $binaryA, string $binaryB): int
+    {
+        $distance = 0;
+        $length = min(strlen($binaryA), strlen($binaryB)); // Ensure we only compare the common length
+
+        for ($i = 0; $i < $length; $i++) {
+            $xor = ord($binaryA[$i]) ^ ord($binaryB[$i]); // XOR the bytes
+            $distance += self::count_bits($xor); // Count the bits set to 1
+        }
+
+        // Account for any remaining characters in the longer string
+        $distance += abs(strlen($binaryA) - strlen($binaryB)) * 8;
+
+        return $distance;
+    }
+
+    // Helper function to count the number of bits set to 1 in a byte (popcount)
+    private static function count_bits(int $byte): int
+    {
+        $count = 0;
+        while ($byte) {
+            $count += $byte & 1;
+            $byte >>= 1;
+        }
+        return $count;
+    }
+
+    // Chunked binary search using Hamming distance
+    public static function hammingSearch(string $binaryVector, int $topN = 10, int $chunkSize = 1000): array
+    {
+        $page = 0;
+        $results = [];
+
+        do {
+            $vectorsBatch = self::query()
+                ->select(['id', 'binary_code'])
+                ->offset($page * $chunkSize)
+                ->limit($chunkSize)
+                ->get();
+
+            if ($vectorsBatch->isEmpty()) {
+                break;
+            }
+
+            foreach ($vectorsBatch as $vectorData) {
+                $hammingDist = self::hammingDistance($binaryVector, $vectorData->binary_code);
+                $results[] = [
+                    'id' => $vectorData->id,
+                    'hamming_distance' => $hammingDist
+                ];
+            }
+
+            $page++;
+
+        } while (count($vectorsBatch) === $chunkSize);
+
+        // Sort by Hamming distance
+        usort($results, fn($a, $b) => $a['hamming_distance'] <=> $b['hamming_distance']);
+
+        return array_slice($results, 0, $topN);
+    }
+
 }
