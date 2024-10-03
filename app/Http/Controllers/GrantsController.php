@@ -53,9 +53,10 @@ class GrantsController extends Controller
 
         try {
             $searchType = $request->input('search_type');
-            $topN = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 2000;
+            $topN = 2000;
+            $top_centroids = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 5;
             $useHamming = $request->input('hamming_mode', 'hybrid');
-            $results = $this->performSearch($searchTerm, $searchType, $topN, $useHamming);
+            $results = $this->performSearch($searchTerm, $searchType, $topN, $useHamming, $top_centroids);
         } catch (\Exception $e) {
             // Log the exception if search fails
             Log::error('Search failed.', ['error' => $e->getMessage()]);
@@ -79,14 +80,14 @@ class GrantsController extends Controller
     /**
      * Perform a search (vector or centroid) using the embedded search term.
      */
-    public function performSearch($searchTerm, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid')
+    public function performSearch($searchTerm, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5)
     {
         try {
             // Step 1: Embed the search term into a vector
             $embedding = $this->embedText($searchTerm);
 
             // Step 2: Retrieve similar vectors
-            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming);
+            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids);
 
             if (empty($similarVectors)) {
                 throw new \Exception("No similar vectors found.");
