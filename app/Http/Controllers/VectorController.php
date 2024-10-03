@@ -84,12 +84,15 @@ class VectorController extends Controller
 
         switch ($useHamming) {
             case 'cosine':
+                $chunkSize = 2000; // Set a lower chunk size for cosine similarity search
                 $similarVectors = $this->searchByCosineSimilarity($vector, $topN);
                 break;
             case 'hamming':
+                $chunkSize = 200000;
                 $similarVectors = $this->searchByHammingDistance($vector, $topN, $chunkSize);
                 break;
             case 'hybrid':
+                $chunkSize = 200000;
                 $similarVectors = $this->searchHybrid($vector, $topN, $percentageToRefine, $chunkSize);
                 break;
             default:
