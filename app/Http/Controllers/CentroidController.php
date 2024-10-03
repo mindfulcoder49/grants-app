@@ -69,7 +69,7 @@ class CentroidController extends Controller
         $queryVector = $validated['vector'];
         $top_centroids = $validated['top_centroids'] ?? 5;
         $topN = $validated['topN'] ?? 10;
-        $chunkSize = $validated['chunkSize'] ?? 1000;
+        $chunkSize = $validated['chunkSize'] ?? 100000;
 
         // Step 1: Convert query vector to binary
         $normalizedVector = Vector::normalize($queryVector);
@@ -107,7 +107,7 @@ class CentroidController extends Controller
         $top_centroids = $validated['top_centroids'] ?? 5;
         $topN = $validated['topN'] ?? 10;
         $percentageToRefine = $validated['percentageToRefine'] ?? 0.1;
-        $chunkSize = $validated['chunkSize'] ?? 1000;
+        $chunkSize = $validated['chunkSize'] ?? 100000;
 
         // Step 1: Convert query vector to binary
         $normalizedVector = Vector::normalize($queryVector);
