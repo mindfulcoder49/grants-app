@@ -24,6 +24,27 @@
           <label for="top_centroids" class="font-medium">Top Centroids (1-200):</label>
           <input type="number" id="top_centroids" name="top_centroids" v-model="top_centroids" min="1" max="200" class="form-input w-24 border border-gray-300 rounded-md">
         </div>
+        <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid-->
+        <div class="flex items-center space-x-4">
+          <label for="hamming_mode" class="font-medium">Hamming Mode:</label>
+          <div id="hamming_mode" class="flex items-center space-x-4">
+            <label for="cosine"  class="border border-gray-600 rounded-md space-x-4 p-2">
+              <input type="radio" id="cosine" name="hamming_mode" value="cosine" v-model="hamming_mode" class="form-radio
+              ">
+              &nbsp  Cosine
+            </label>
+              <label for="hamming" class="border border-gray-600 rounded-md space-x-4 p-2">
+              <input type="radio" id="hamming" name="hamming_mode" value="hamming" v-model="hamming_mode" class="form-radio">
+               &nbsp Hamming
+            </label>
+            <label for="hybrid" class="border border-gray-600 rounded-md space-x-4 p-2">
+              <input type="radio" id="hybrid" name="hamming_mode" value="hybrid" v-model="hamming_mode" class="form-radio
+              ">
+              &nbsp  Hybrid
+            </label>
+          </div>
+        </div>
+
       </div>
 
 
@@ -43,6 +64,7 @@
       return {
         search_type: 'centroid', // Default search type
         top_centroids: 50, // Default top centroids
+        hamming_mode: 'hybrid', // Default hamming mode
       };
     },
     methods: {
@@ -51,6 +73,7 @@
           description: this.companyDescription,
           search_type: this.search_type,
           top_centroids: this.top_centroids,
+          hamming_mode: this.hamming_mode,
         };
 
         // Emit search event with data directly from prop

@@ -74,76 +74,253 @@ class VectorController extends Controller
         Log::info('searchSimilarVectors: Searching for similar vectors.');
         $vector = $request->input('vector', []);
         $topN = $request->input('topN', 5);
+        $useHamming = $request->input('useHamming', 'hybrid');
+        $percentageToRefine = $request->input('percentageToRefine', 1);
+        $chunkSize = $request->input('chunkSize', 1000);
+        
 
         Log::info('searchSimilarVectors: Vector received.');
         Log::info('searchSimilarVectors: Top N value.', ['topN' => $topN]);
 
-        $similarVectors = Vector::search($vector, $topN);
+        switch ($useHamming) {
+            case 'cosine':
+                $similarVectors = $this->searchByCosineSimilarity($vector, $topN);
+                break;
+            case 'hamming':
+                $similarVectors = $this->searchByHammingDistance($vector, $topN, $chunkSize);
+                break;
+            case 'hybrid':
+                $similarVectors = $this->searchHybrid($vector, $topN, $percentageToRefine, $chunkSize);
+                break;
+            default:
+                $similarVectors = $this->searchHybrid($vector, $topN, $percentageToRefine, $chunkSize);
+        }
 
         Log::info('searchSimilarVectors: Found similar vectors.', ['count' => count($similarVectors)]);
         return response()->json(['similar_vectors' => $similarVectors]);
     }
 
-    // everything below this needs to be fixed with AI
     public function searchSimilarVectorsWithGrants(Request $request)
     {
         // Log the function name and initial inputs
-        Log::info('searchSimilarVectors: Searching for similar vectors.');
+        Log::info('searchSimilarVectorsWithGrants: Searching for similar vectors with grants.');
         $vector = $request->input('vector', []);
         $topN = $request->input('topN', 5);
 
-        Log::info('searchSimilarVectors: Vector received.');
-        Log::info('searchSimilarVectors: Top N value.', ['topN' => $topN]);
+        Log::info('searchSimilarVectorsWithGrants: Vector received.');
+        Log::info('searchSimilarVectorsWithGrants: Top N value.', ['topN' => $topN]);
 
-        // Step 1: Search for similar vectors using your vector table
-        $similarVectors = $this->vectorTable->search($vector, 2000); // Assuming 2000 dimensions or distance measure
-        Log::info('searchSimilarVectors: Found similar vectors.', ['count' => count($similarVectors)]);
-
-        // Step 1.5: Limit the number of similar vectors to the top N
-        $similarVectors = array_slice($similarVectors, 0, $topN);
-        Log::info('searchSimilarVectors: Limited similar vectors to top N.', ['topN' => $topN]);
+        // Step 1: Search for similar vectors using the search method
+        $similarVectors = $this->search($vector, $topN);
+        Log::info('searchSimilarVectorsWithGrants: Found similar vectors.', ['count' => count($similarVectors)]);
 
         // Step 2: Extract vector IDs from the similar vectors
-        $vectorIds = array_column($similarVectors, 'id'); // Assuming 'id' is part of the vector data
-        Log::info('searchSimilarVectors: Extracted vector IDs.', ['count' => count($vectorIds)]);
+        $vectorIds = array_column($similarVectors, 'id');
+        Log::info('searchSimilarVectorsWithGrants: Extracted vector IDs.', ['count' => count($vectorIds)]);
 
-        // Step 3: Fetch related grant IDs from the 'grant_vector' pivot table
+        // Step 3: Fetch the vector models
+        $vectors = Vector::whereIn('id', $vectorIds)->get()->keyBy('id');
+
+        // Step 4: Fetch related grant IDs from the 'grant_vector' pivot table
         $pivotRecords = DB::table('grant_vector')
             ->whereIn('vector_id', $vectorIds)
             ->get(['grant_id', 'vector_id']);
-        Log::info('searchSimilarVectors: Fetched pivot records.', ['count' => $pivotRecords->count()]);
+        Log::info('searchSimilarVectorsWithGrants: Fetched pivot records.', ['count' => $pivotRecords->count()]);
 
-        // Step 4: Use grant IDs to fetch grant data from the 'grants' table
-        $grantIds = $pivotRecords->pluck('grant_id')->unique();
-        $grants = Grant::whereIn('id', $grantIds)->get();
-        Log::info('searchSimilarVectors: Fetched grants.', ['count' => $grants->count()]);
+        // Step 5: Use grant IDs to fetch grant data from the 'grants' table
+        $grantIds = $pivotRecords->pluck('grant_id')->unique()->toArray();
+        $grants = Grant::whereIn('id', $grantIds)->get()->keyBy('id');
+        Log::info('searchSimilarVectorsWithGrants: Fetched grants.', ['count' => $grants->count()]);
 
-        // Step 5: Map the similar vectors to their corresponding grants
-        $formattedVectors = collect($similarVectors)->map(function ($vector) use ($pivotRecords, $grants) {
-            // Find the matching pivot record and grant for this vector
-            $pivot = $pivotRecords->firstWhere('vector_id', $vector['id']);
-            $grant = $grants->firstWhere('id', $pivot->grant_id);
+        // Step 6: Map the similar vectors to their corresponding grants
+        $formattedVectors = collect($similarVectors)->map(function ($vectorData) use ($vectors, $pivotRecords, $grants) {
+            $vectorId = $vectorData['id'];
+            $vectorModel = $vectors->get($vectorId);
 
-            if ($grant) {
-                $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
-                $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
-                $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+            // Find the matching pivot record for this vector
+            $pivot = $pivotRecords->firstWhere('vector_id', $vectorId);
 
-                return [
-                    'id' => $vector['id'],
-                    'text' => $textToEmbed,
-                    'vector' => $vector['vector'], // Assuming vector has a 'vector' field
-                ];
+            if ($pivot) {
+                // Find the corresponding grant
+                $grant = $grants->get($pivot->grant_id);
+
+                if ($grant) {
+                    $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
+                    $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
+                    $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+
+                    return [
+                        'id'         => $vectorId,
+                        'similarity' => $vectorData['similarity'],
+                        'text'       => $textToEmbed,
+                        'vector'     => $vectorModel->vector, // Assuming 'vector' is a field on your Vector model
+                    ];
+                }
             }
 
             return null; // Return null if no grant found
-        })->filter(); // Filter out nulls if any vectors don’t have matching grants
+        })->filter()->values(); // Filter out nulls and reset keys
 
-        Log::info('searchSimilarVectors: Formatted similar vectors for response.', ['vector_count' => $formattedVectors->count()]);
+        Log::info('searchSimilarVectorsWithGrants: Formatted similar vectors for response.', ['vector_count' => $formattedVectors->count()]);
 
         // Return the formatted similar vectors along with their grant data
         return response()->json(['similar_vectors' => $formattedVectors]);
     }
+
+
+    /**
+     * Search using only cosine similarity.
+     */
+    public static function searchByCosineSimilarity(array $vector, int $topN = 10): array
+    {
+        $normalizedVector = Vector::normalize($vector);
+
+        // Initialize an empty array to store the top N results
+        $topResults = [];
+
+        // Process vectors in chunks to avoid loading all into memory
+        Vector::chunk(1000, function ($vectors) use ($normalizedVector, &$topResults, $topN) {
+            foreach ($vectors as $vectorData) {
+                $storedNormalizedVector = $vectorData->normalized_vector; // Assuming this is stored in your database
+                $similarity = Vector::cosineSimilarity($normalizedVector, $storedNormalizedVector);
+
+                // If we have fewer than topN results, add the current result
+                if (count($topResults) < $topN) {
+                    $topResults[] = [
+                        'id'         => $vectorData->id,
+                        'similarity' => $similarity,
+                    ];
+                    // If we have exactly topN results, sort them ascending by similarity
+                    if (count($topResults) == $topN) {
+                        usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
+                    }
+                } else {
+                    // Check if the current similarity is greater than the smallest in topResults
+                    if ($similarity > $topResults[0]['similarity']) {
+                        // Replace the smallest similarity with the current one
+                        $topResults[0] = [
+                            'id'         => $vectorData->id,
+                            'similarity' => $similarity,
+                        ];
+                        // Re-sort the topResults array
+                        usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
+                    }
+                }
+            }
+        });
+
+        // After processing all chunks, sort the topResults in descending order
+        usort($topResults, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+
+        // Return the top N results
+        return $topResults;
+    }
+
+
+    /**
+     * Search using only Hamming distance.
+     */
+    public static function searchByHammingDistance(array $vector, int $topN = 10, int $chunkSize = 1000): array
+    {
+        $normalizedVector = Vector::normalize($vector);
+        $binaryVector = Vector::vectorToBinary($normalizedVector);
+
+        // Perform the Hamming distance-based search
+        $hammingResults = self::hammingSearch($binaryVector, $topN, $chunkSize);
+
+        // Convert Hamming distance to similarity (lower distance means higher similarity)
+        $results = array_map(function ($result) {
+            $vectorData = Vector::find($result['id']);
+            $maxDistance = 8 * strlen($vectorData->binary_code); // Maximum possible Hamming distance
+            $similarity = $maxDistance - $result['hamming_distance'];
+
+            return [
+                'id'         => $vectorData->id,
+                'similarity' => $similarity,
+                'vector'     => $vectorData->vector,
+            ];
+        }, $hammingResults);
+
+        // Sort the results by similarity in descending order
+        usort($results, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+
+        // Return the top N results
+        return array_slice($results, 0, $topN);
+    }
+
+    /**
+     * Hybrid search using Hamming distance to narrow down candidates and refining with cosine similarity.
+     */
+    public static function searchHybrid(array $vector, int $topN = 10, float $percentageToRefine = 1.0, int $chunkSize = 1000): array
+    {
+        // Normalize input vector and convert it to binary
+        $normalizedVector = Vector::normalize($vector);
+        $binaryVector = Vector::vectorToBinary($normalizedVector);
+
+        // Step 1: Perform the Hamming distance-based search
+        $hammingResults = self::hammingSearch($binaryVector, $topN, $chunkSize);
+
+        // Step 2: Determine the number of closest matches to perform cosine similarity on
+        $numCosineChecks = max(1, floor($topN * $percentageToRefine));
+
+        $cosineResults = [];
+
+        // Step 3: Perform cosine similarity on the top N percentage
+        foreach (array_slice($hammingResults, 0, $numCosineChecks) as $result) {
+            $vectorData = Vector::find($result['id']); // Fetch the full vector data
+            $storedNormalizedVector = $vectorData->normalized_vector;
+            $similarity = Vector::cosineSimilarity($normalizedVector, $storedNormalizedVector);
+
+            $cosineResults[] = [
+                'id'         => $vectorData->id,
+                'similarity' => $similarity,
+                'vector'     => $vectorData->vector,
+            ];
+        }
+
+        // Sort the refined cosine results by similarity
+        usort($cosineResults, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+
+        // Return the refined top N cosine similarity results
+        return array_slice($cosineResults, 0, $topN);
+    }
+
+    // Chunked binary search using Hamming distance
+    public static function hammingSearch(string $binaryVector, int $topN = 10, int $chunkSize = 1000): array
+    {
+        $page = 0;
+        $results = [];
+
+        do {
+            $vectorsBatch = Vector::query()
+                ->select(['id', 'binary_code'])
+                ->offset($page * $chunkSize)
+                ->limit($chunkSize)
+                ->get();
+
+            if ($vectorsBatch->isEmpty()) {
+                break;
+            }
+
+            foreach ($vectorsBatch as $vectorData) {
+                $hammingDist = Vector::hammingDistance($binaryVector, $vectorData->binary_code);
+                $results[] = [
+                    'id' => $vectorData->id,
+                    'hamming_distance' => $hammingDist
+                ];
+            }
+
+            $page++;
+
+        } while (count($vectorsBatch) === $chunkSize);
+
+        // Sort by Hamming distance
+        usort($results, fn($a, $b) => $a['hamming_distance'] <=> $b['hamming_distance']);
+
+        return array_slice($results, 0, $topN);
+    }
+
+
 
 
     // Embed text and get vector representation
@@ -159,47 +336,52 @@ class VectorController extends Controller
 
     public function listVectors(Request $request)
     {
-        // Step 1: Fetch vectors from the vector table
-        Log::info('Fetching the first 100 vectors using vectorTable->selectAll().');
-        $vectors = $this->vectorTable->selectAll(); // Assuming this returns a collection or array of vectors
-        $vectors = array_slice($vectors, 0, 100); // Limit to the first 100 vectors
+        // Step 1: Fetch the first 100 vectors from the 'vectors' table
+        Log::info('Fetching the first 100 vectors.');
+        $vectors = Vector::limit(100)->get();
 
-        // Step 2: Extract vector IDs and fetch related grant IDs from the grant_vector table
-        $vectorIds = array_column($vectors, 'id'); // Assuming vectors have an 'id' field
+        // Step 2: Extract vector IDs and fetch related grant IDs from the 'grant_vector' pivot table
+        $vectorIds = $vectors->pluck('id')->toArray();
+
         $pivotRecords = DB::table('grant_vector')
             ->whereIn('vector_id', $vectorIds)
             ->get(['grant_id', 'vector_id']);
 
-        // Step 3: Use grant IDs to fetch grant data from the grants table
-        $grantIds = $pivotRecords->pluck('grant_id')->unique();
+        // Step 3: Use grant IDs to fetch grant data from the 'grants' table
+        $grantIds = $pivotRecords->pluck('grant_id')->unique()->toArray();
         $grants = Grant::whereIn('id', $grantIds)->get();
 
         // Step 4: Map the vectors to their corresponding grants
-        $formattedVectors = collect($vectors)->map(function ($vector) use ($pivotRecords, $grants) {
-            // Find the matching pivot record and grant for this vector
-            $pivot = $pivotRecords->firstWhere('vector_id', $vector['id']);
-            $grant = $grants->firstWhere('id', $pivot->grant_id);
+        $formattedVectors = $vectors->map(function ($vector) use ($pivotRecords, $grants) {
+            // Find the matching pivot record for this vector
+            $pivot = $pivotRecords->firstWhere('vector_id', $vector->id);
 
-            if ($grant) {
-                $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
-                $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
-                $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+            if ($pivot) {
+                // Find the corresponding grant
+                $grant = $grants->firstWhere('id', $pivot->grant_id);
 
-                return [
-                    'id' => $vector['id'],
-                    'text' => $textToEmbed,
-                    'vector' => $vector['vector'], // Assuming vector has a 'vector' field
-                ];
+                if ($grant) {
+                    $textToEmbed = "Title: " . $grant->opportunity_title . ' Description: ' . $grant->description;
+                    $textToEmbed .= ' Category: ' . $grant->opportunity_category . ' Funding Instrument: ' . $grant->funding_instrument_type;
+                    $textToEmbed .= ' Eligible Applicants: ' . $grant->eligible_applicants . ' Agency: ' . $grant->agency_name;
+
+                    return [
+                        'id'     => $vector->id,
+                        'text'   => $textToEmbed,
+                        'vector' => $vector->vector, // Assuming 'vector' is a field on your Vector model
+                    ];
+                }
             }
 
             return null; // Return null if no grant found
-        })->filter(); // Filter out nulls if any vectors don’t have matching grants
+        })->filter()->values(); // Filter out nulls and reset keys
 
         Log::info('Formatted vectors for response.', ['vector_count' => $formattedVectors->count()]);
 
         // Return the formatted vectors
         return response()->json(['vectors' => $formattedVectors]);
     }
+
 
 
 
