@@ -76,7 +76,7 @@ class VectorController extends Controller
         $topN = $request->input('topN', 5);
         $useHamming = $request->input('useHamming', 'hybrid');
         $percentageToRefine = $request->input('percentageToRefine', 1);
-        $chunkSize = $request->input('chunkSize', 1000);
+        $chunkSize = $request->input('chunkSize', 50000);
         
 
         Log::info('searchSimilarVectors: Vector received.');
