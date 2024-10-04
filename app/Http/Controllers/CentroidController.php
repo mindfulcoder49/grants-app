@@ -36,17 +36,18 @@ class CentroidController extends Controller
         ]);
 
         $queryVector = $validated['vector'];
+        $normalizedVector = Vector::normalize($queryVector);
         $top_centroids = $validated['top_centroids'] ?? 5;
         $topN = $validated['topN'] ?? 10;
 
         // Step 1: Find the closest centroids
-        $closestCentroids = $this->findClosestCentroids($queryVector, $top_centroids);
+        $closestCentroids = $this->findClosestCentroids($$normalizedVector, $top_centroids);
 
         // Step 2: Retrieve vectors from these centroids
         $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
 
         // Step 3: Calculate cosine similarity
-        $similarVectors = $this->calculateSimilarities($queryVector, $vectorsInCentroids, 'cosine');
+        $similarVectors = $this->calculateSimilarities($normalizedVector, $vectorsInCentroids, 'cosine');
 
         // Step 4: Return top N similar vectors
         $topVectors = array_slice($similarVectors, 0, $topN);
@@ -76,7 +77,7 @@ class CentroidController extends Controller
         $binaryQueryVector = Vector::vectorToBinary($normalizedVector);
 
         // Step 2: Find the closest centroids
-        $closestCentroids = $this->findClosestCentroids($queryVector, $top_centroids);
+        $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
 
         // Step 3: Retrieve vectors from these centroids
         $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
@@ -114,7 +115,7 @@ class CentroidController extends Controller
         $binaryQueryVector = Vector::vectorToBinary($normalizedVector);
 
         // Step 2: Find the closest centroids
-        $closestCentroids = $this->findClosestCentroids($queryVector, $top_centroids);
+        $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
 
         // Step 3: Retrieve vectors from these centroids
         $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
@@ -130,7 +131,7 @@ class CentroidController extends Controller
         $vectorIdsToRefine = array_column($vectorsToRefine, 'id');
         $vectorsDataToRefine = $this->getVectorsByIds($vectorIdsToRefine);
 
-        $refinedResults = $this->calculateSimilarities($queryVector, $vectorsDataToRefine, 'cosine');
+        $refinedResults = $this->calculateSimilarities($normalizedVector, $vectorsDataToRefine, 'cosine');
 
         // Step 6: Merge and sort results
         $finalResults = array_merge($refinedResults, array_slice($hammingResults, $numToRefine));

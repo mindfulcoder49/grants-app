@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use App\Models\Vector;
@@ -11,25 +12,29 @@ class AssignVectorsToCentroidsSeeder extends Seeder
 {
     public function run()
     {
-        Log::info('Starting centroid assignment forvectors.');
+        Log::info('Starting centroid assignment for vectors.');
 
         // Step 1: Fetch all centroids
         $centroids = Centroid::all();
 
-        // Step 2: Process grant vectors in chunks to avoid memory overload
-        DB::table('grant_vector')->orderBy('opportunity_id')->chunk(100, function ($grantVectorRecords) use ($centroids) {
-            foreach ($grantVectorRecords as $grantVectorRecord) {
-                // Fetch the vector data
-                $vector = Vector::find($grantVectorRecord->vector_id);
+        // Step 2: Get the total count of vectors
+        $totalVectors = Vector::count();
+        Log::info("Total vectors to process: {$totalVectors}");
 
-                if (!$vector) {
-                    Log::warning("Vector ID {$grantVectorRecord->vector_id} not found, skipping.");
+        
+        // Step 3: Process vectors in chunks to avoid memory overload
+        $processedCount = 0;
+        Vector::chunk(100, function ($vectors) use ($centroids, $totalVectors, &$processedCount) {
+            foreach ($vectors as $vector) {
+                // Fetch the normalized vector data
+                $grantVectorData = $vector->normalized_vector;
+
+                if (!$grantVectorData) {
+                    Log::warning("Vector ID {$vector->id} has invalid normalized_vector data, skipping.");
                     continue;
                 }
 
-                $grantVectorData = $vector->vector;
-
-                // Step 3: Find the closest centroid for this vector
+                // Step 4: Find the closest centroid for this vector
                 $bestMatch = null;
                 $bestDistance = PHP_FLOAT_MAX;
 
@@ -43,18 +48,24 @@ class AssignVectorsToCentroidsSeeder extends Seeder
                     }
                 }
 
-                // Step 4: Assign the closest centroid to the grant vector
+                // Step 5: Assign the closest centroid to the vector
                 if ($bestMatch) {
                     DB::table('grant_vector')
-                        ->where('id', $grantVectorRecord->id)
+                        ->where('vector_id', $vector->id)
                         ->update(['centroid_id' => $bestMatch->id]);
 
                     Log::info("Assigned centroid {$bestMatch->id} to vector ID {$vector->id}.");
                 }
+
+                // Increment processed count and log progress
+                $processedCount++;
+                if ($processedCount % 10 == 0 || $processedCount == $totalVectors) {
+                    Log::info("Processed {$processedCount} out of {$totalVectors} vectors.");
+                }
             }
         });
 
-        Log::info('Centroid assignment for grant vectors completed.');
+        Log::info('Centroid assignment for vectors completed.');
     }
 
     /**
@@ -62,6 +73,10 @@ class AssignVectorsToCentroidsSeeder extends Seeder
      */
     private function cosineSimilarity($vectorA, $vectorB)
     {
+        if (!$vectorA || !$vectorB) {
+            return PHP_FLOAT_MAX;
+        }
+
         $dotProduct = array_sum(array_map(fn($a, $b) => $a * $b, $vectorA, $vectorB));
         $magnitudeA = sqrt(array_sum(array_map(fn($a) => $a * $a, $vectorA)));
         $magnitudeB = sqrt(array_sum(array_map(fn($b) => $b * $b, $vectorB)));

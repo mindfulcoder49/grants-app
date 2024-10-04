@@ -14,9 +14,6 @@ use App\Http\Controllers\EmailController;
 
 Route::post('/feedback', [EmailController::class, 'store']);
 
-
-
-
 Route::middleware('auth')->group(function () {
     Route::post('/saved-grants', [SavedGrantController::class, 'store']);
     Route::get('/saved-grants', [SavedGrantController::class, 'index'])->name('saved-grants');
