@@ -41,7 +41,7 @@ class CentroidController extends Controller
         $topN = $validated['topN'] ?? 10;
 
         // Step 1: Find the closest centroids
-        $closestCentroids = $this->findClosestCentroids($$normalizedVector, $top_centroids);
+        $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
 
         // Step 2: Retrieve vectors from these centroids
         $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
