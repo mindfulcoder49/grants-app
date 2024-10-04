@@ -15,6 +15,8 @@ use App\Http\Controllers\EmailController;
 Route::post('/feedback', [EmailController::class, 'store']);
 
 
+
+
 Route::middleware('auth')->group(function () {
     Route::post('/saved-grants', [SavedGrantController::class, 'store']);
     Route::get('/saved-grants', [SavedGrantController::class, 'index'])->name('saved-grants');
@@ -25,6 +27,10 @@ Route::middleware('auth')->group(function () {
 Route::get('/vector-test', function () {
     return Inertia::render('VectorTest');
 })->name('vector.test');
+
+Route::get('/search-test', function () {
+    return Inertia::render('SearchTest');
+})->name('search.test');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/', [GrantsController::class, 'search'])->name('search');

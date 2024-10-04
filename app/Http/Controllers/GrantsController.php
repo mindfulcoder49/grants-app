@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Grant;
+use App\Models\SavedGrant;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\VectorController;
@@ -34,6 +35,8 @@ class GrantsController extends Controller
             'search_type'   => 'string|required',
             'top_centroids' => 'integer|nullable',
             'hamming_mode'  => 'string|nullable',
+            'testMode'    => 'boolean|nullable',
+            'topN'          => 'integer|nullable',
         ]);
 
         // Log the incoming search request
@@ -53,7 +56,7 @@ class GrantsController extends Controller
 
         try {
             $searchType = $request->input('search_type');
-            $topN = 2000;
+            $topN = $request->input('topN', 2000);
             $top_centroids = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 5;
             $useHamming = $request->input('hamming_mode', 'hybrid');
             $results = $this->performSearch($searchTerm, $searchType, $topN, $useHamming, $top_centroids);
@@ -69,6 +72,14 @@ class GrantsController extends Controller
 
         // Log the number of results found
         Log::info('Search results found.', ['count' => $results->count()]);
+
+        //take topN results
+        $results = $results->take($topN);
+
+        if ($request->input('testMode')) {
+            // If test mode is enabled, return the results as JSON the same way the API would
+            return response()->json(['grants' => $results->values()->toArray()]);
+        }
 
         // Pass the results to the Inertia page along with the search term
         return Inertia::render('Home', [
@@ -236,7 +247,7 @@ class GrantsController extends Controller
         }
 
         // Check if the email exists in the database
-        $existingGrant = Grant::where('email', $user->email)->first();
+        $existingGrant = SavedGrant::where('email', $user->email)->first();
 
         if ($existingGrant) {
             // If the user's grant info exists, update it
