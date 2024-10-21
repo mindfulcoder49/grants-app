@@ -63,13 +63,6 @@
                         class="color-square"
                         :style="{ backgroundColor: '#' + grant.id.toString().padEnd(6, '0') }"
                     >&nbsp;</span>
-                    <!-- Add a color square to represent if it matches the same index in the vector result if available -->
-                    <div v-if="vectorResult">
-                      <span 
-                        class="color-square"
-                        :style="{ backgroundColor: result.grants[index].id === vectorResult.grants[index].id ? 'green' : 'red' }"
-                      >&nbsp;</span>
-                    </div>
                 </div>
 
               </div>
@@ -178,8 +171,6 @@
                   similarity: grant.similarity, // Store grant similarity score
                 })),
               });
-
-                this.vectorResult = vectorResponse.data.grants.map(grant => grant.id);
             }
           }
         } catch (error) {
