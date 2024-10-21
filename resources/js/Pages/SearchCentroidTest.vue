@@ -55,9 +55,14 @@
               Grants: 
               <div class="scrolling-row">
                 <div v-for="grant in result.grants" :key="grant.id" class="flex flex-col">
-                  <span class="font-bold flex-column ">{{ grant.id }}</span> 
-                  <span>{{ (grant.similarity * 100).toFixed(2) }}%</span>
+                    <span class="font-bold flex-column">{{ grant.id }}</span>
+                    <span>{{ (grant.similarity * 100).toFixed(2) }}%</span>
+                    <span 
+                        class="color-square"
+                        :style="{ backgroundColor: '#' + grant.id.toString().padEnd(6, '0') }"
+                    >&nbsp;</span>
                 </div>
+
               </div>
             </div>
           </li>
