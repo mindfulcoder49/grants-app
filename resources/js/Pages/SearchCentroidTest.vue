@@ -50,7 +50,7 @@
         <h2 class="text-xl font-bold mb-4">Search Results</h2>
         <ul>
           <li v-for="result in results" :key="result.term">
-            <strong>{{ result.term }}</strong> - Centroids Searched: {{ result.centroidsSearched }} - Time: {{ (result.timeTaken/1000).toFixed(2) }} seconds
+            <strong>{{ result.term.substring(0, 20) }}...</strong> - Centroids Searched: {{ result.centroidsSearched }} - Time: {{ (result.timeTaken/1000).toFixed(2) }} seconds
             <div class="grants-list">
               Grants: 
               <div class="scrolling-row">
