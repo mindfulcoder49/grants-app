@@ -9,6 +9,7 @@ use App\Models\Vector;
 use Illuminate\Support\Facades\DB;
 use App\Models\Grant;
 use GuzzleHttp\Client;
+use parallel\Runtime; 
 
 
 
@@ -174,50 +175,67 @@ class VectorController extends Controller
     /**
      * Search using only cosine similarity.
      */
-    public static function searchByCosineSimilarity(array $vector, int $topN = 10): array
-    {
-        $normalizedVector = Vector::normalize($vector);
 
-        // Initialize an empty array to store the top N results
-        $topResults = [];
+public static function searchByCosineSimilarity(array $vector, int $topN = 10): array
+{
+    $normalizedVector = Vector::normalize($vector);
 
-        // Process vectors in chunks to avoid loading all into memory
-        Vector::chunk(1000, function ($vectors) use ($normalizedVector, &$topResults, $topN) {
-            foreach ($vectors as $vectorData) {
-                $storedNormalizedVector = $vectorData->normalized_vector; // Assuming this is stored in your database
-                $similarity = Vector::cosineSimilarity($normalizedVector, $storedNormalizedVector);
+    // Initialize an empty array to store the top N results
+    $topResults = [];
 
-                // If we have fewer than topN results, add the current result
-                if (count($topResults) < $topN) {
-                    $topResults[] = [
-                        'id'         => $vectorData->id,
+    // Process vectors in chunks to avoid loading all into memory
+    Vector::chunk(1000, function ($vectors) use ($normalizedVector, &$topResults, $topN) {
+        // Initialize runtimes (parallel threads)
+        $runtimes = [];
+
+        // Start parallel jobs for each vector comparison
+        foreach ($vectors as $key => $vectorData) {
+            $runtimes[$key] = new Runtime();
+            $runtimes[$key]->run(function() use ($normalizedVector, $vectorData) {
+                return [
+                    'id' => $vectorData->id,
+                    'similarity' => Vector::cosineSimilarity($normalizedVector, $vectorData->normalized_vector),
+                ];
+            });
+        }
+
+        // Collect results after all comparisons finish
+        foreach ($runtimes as $key => $runtime) {
+            $result = $runtime->value();
+            $similarity = $result['similarity'];
+
+            // If we have fewer than topN results, add the current result
+            if (count($topResults) < $topN) {
+                $topResults[] = [
+                    'id'         => $result['id'],
+                    'similarity' => $similarity,
+                ];
+                // If we have exactly topN results, sort them ascending by similarity
+                if (count($topResults) == $topN) {
+                    usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
+                }
+            } else {
+                // Check if the current similarity is greater than the smallest in topResults
+                if ($similarity > $topResults[0]['similarity']) {
+                    // Replace the smallest similarity with the current one
+                    $topResults[0] = [
+                        'id'         => $result['id'],
                         'similarity' => $similarity,
                     ];
-                    // If we have exactly topN results, sort them ascending by similarity
-                    if (count($topResults) == $topN) {
-                        usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
-                    }
-                } else {
-                    // Check if the current similarity is greater than the smallest in topResults
-                    if ($similarity > $topResults[0]['similarity']) {
-                        // Replace the smallest similarity with the current one
-                        $topResults[0] = [
-                            'id'         => $vectorData->id,
-                            'similarity' => $similarity,
-                        ];
-                        // Re-sort the topResults array
-                        usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
-                    }
+                    // Re-sort the topResults array
+                    usort($topResults, fn($a, $b) => $a['similarity'] <=> $b['similarity']);
                 }
             }
-        });
+        }
+    });
 
-        // After processing all chunks, sort the topResults in descending order
-        usort($topResults, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+    // After processing all chunks, sort the topResults in descending order
+    usort($topResults, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
 
-        // Return the top N results
-        return $topResults;
-    }
+    // Return the top N results
+    return $topResults;
+}
+
 
 
     /**

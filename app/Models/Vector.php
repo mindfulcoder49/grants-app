@@ -48,20 +48,11 @@ class Vector extends Model
     public static function cosineSimilarity(array $vectorA, array $vectorB): float
     {
         $dotProduct = 0;
-        $magnitudeA = 0;
-        $magnitudeB = 0;
-
-        for ($i = 0; $i < count($vectorA); $i++) {
+        $count = count($vectorA);
+        for ($i = 0; $i < $count; $i++) {
             $dotProduct += $vectorA[$i] * $vectorB[$i];
-            $magnitudeA += $vectorA[$i] * $vectorA[$i];
-            $magnitudeB += $vectorB[$i] * $vectorB[$i];
         }
-
-        if ($magnitudeA == 0 || $magnitudeB == 0) {
-            return 0;
-        }
-
-        return $dotProduct / (sqrt($magnitudeA) * sqrt($magnitudeB));
+        return $dotProduct;
     }
         
 
