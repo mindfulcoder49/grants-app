@@ -54,7 +54,10 @@
             <div class="grants-list">
               Grants: 
               <div class="scrolling-row">
-                <span v-for="id in result.grants" :key="id">{{ id }}</span>
+                <div v-for="grant in result.grants" :key="grant.id" class="flex flex-col">
+                  <span class="font-bold flex-column ">{{ grant.id }}</span> 
+                  <span >{{ grant.similarity.toFixed(2) * 100 }}%</span>
+                </div>
               </div>
             </div>
           </li>
@@ -131,7 +134,10 @@
                   term,
                   centroidsSearched: i,
                   timeTaken,
-                  grants: response.data.grants.map(grant => grant.id), // Store grant ids
+                  grants: response.data.grants.map(grant => ({
+                    id: grant.id,
+                    similarity: grant.similarity, // Store grant similarity score
+                  })),
                 });
               }
             }
@@ -142,20 +148,22 @@
                 description: term,
                 search_type: 'vector',
                 hamming_mode: 'cosine', // Always cosine
-                testMode: true, // Test mode to return json response
+                testMode: true, // Test mode to return only the top result
               };
               const vectorStartTime = performance.now();
               const vectorResponse = await axios.post('/search', vectorPayload);
               const vectorEndTime = performance.now();
               const vectorTimeTaken = vectorEndTime - vectorStartTime;
-              // Store the result for the full vector search
+              
               this.results.push({
                 term,
-                centroidsSearched: 'Full Vector Search',
+                centroidsSearched: 'Vector Search',
                 timeTaken: vectorTimeTaken,
-                grants: vectorResponse.data.grants.map(grant => grant.id), // Store grant ids
+                grants: vectorResponse.data.grants.map(grant => ({
+                  id: grant.id,
+                  similarity: grant.similarity, // Store grant similarity score
+                })),
               });
-
             }
           }
         } catch (error) {
