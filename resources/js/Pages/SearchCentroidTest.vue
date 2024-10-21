@@ -50,17 +50,26 @@
         <h2 class="text-xl font-bold mb-4">Search Results</h2>
         <ul>
           <li v-for="result in results" :key="result.term">
-            <strong>{{ result.term }}</strong> - Centroids Searched: {{ result.centroidsSearched }} - Time: {{ result.timeTaken }} ms
+            <strong>{{ result.term }}</strong> - Centroids Searched: {{ result.centroidsSearched }} - Time: {{ (result.timeTaken/1000).toFixed(2) }} seconds
             <div class="grants-list">
               Grants: 
               <div class="scrolling-row">
-                <div v-for="grant in result.grants" :key="grant.id" class="flex flex-col">
+                <!-- add numbering to the grants -->
+                <div v-for="grant, index in result.grants" :key="grant.id" class="flex flex-col">
+                    <span class="font-bold flex-column">{{ index + 1 }}</span>
                     <span class="font-bold flex-column">{{ grant.id }}</span>
                     <span>{{ (grant.similarity * 100).toFixed(2) }}%</span>
                     <span 
                         class="color-square"
                         :style="{ backgroundColor: '#' + grant.id.toString().padEnd(6, '0') }"
                     >&nbsp;</span>
+                    <!-- Add a color square to represent if it matches the same index in the vector result if available -->
+                    <div v-if="vectorResult">
+                      <span 
+                        class="color-square"
+                        :style="{ backgroundColor: result.grants[index].id === vectorResult.grants[index].id ? 'green' : 'red' }"
+                      >&nbsp;</span>
+                    </div>
                 </div>
 
               </div>
@@ -169,6 +178,8 @@
                   similarity: grant.similarity, // Store grant similarity score
                 })),
               });
+
+                this.vectorResult = vectorResponse.data.grants.map(grant => grant.id);
             }
           }
         } catch (error) {
