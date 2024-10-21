@@ -142,6 +142,7 @@
                 description: term,
                 search_type: 'vector',
                 hamming_mode: 'cosine', // Always cosine
+                testMode: true, // Test mode to return json response
               };
               const vectorStartTime = performance.now();
               const vectorResponse = await axios.post('/search', vectorPayload);
