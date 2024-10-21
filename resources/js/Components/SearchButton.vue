@@ -26,7 +26,7 @@
         </div>
         <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid-->
         <div class="flex items-center space-x-4" >
-          <label for="hamming_mode" class="font-medium">Hamming Mode:</label>
+          <label for="hamming_mode" class="font-medium">Search Mode: (Distance Comparison)</label>
           <div id="hamming_mode" class="flex items-center space-x-4">
             <label for="cosine"  class="border border-gray-600 rounded-md space-x-4 p-2">
               <input type="radio" id="cosine" name="hamming_mode" value="cosine" v-model="hamming_mode" class="form-radio

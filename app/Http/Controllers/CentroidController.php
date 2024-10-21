@@ -41,12 +41,15 @@ class CentroidController extends Controller
         $topN = $validated['topN'] ?? 10;
 
         // Step 1: Find the closest centroids
+        Log::info('Finding closest centroids');
         $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
 
         // Step 2: Retrieve vectors from these centroids
+        Log::info('Retrieving vectors from centroids');
         $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
 
         // Step 3: Calculate cosine similarity
+        Log::info('Calculating cosine similarity');
         $similarVectors = $this->calculateSimilarities($normalizedVector, $vectorsInCentroids, 'cosine');
 
         // Step 4: Return top N similar vectors
@@ -181,6 +184,7 @@ class CentroidController extends Controller
         foreach ($vectorsInCentroid->chunk($chunkSize) as $vectorChunk) {
             foreach ($vectorChunk as $vectorRecord) {
                 if ($method === 'cosine') {
+                    Log::info('Calculating cosine similarity');
                     $vector = $vectorRecord->normalized_vector; // Convert JSON string to array
                     $similarity = Vector::cosineSimilarity($queryVector, $vector);
                 } elseif ($method === 'hamming') {

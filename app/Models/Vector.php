@@ -50,7 +50,8 @@ class Vector extends Model
         $dotProduct = 0;
         $count = count($vectorA);
         for ($i = 0; $i < $count; $i++) {
-            $dotProduct += $vectorA[$i] * $vectorB[$i];
+            //truncate the values to 4 decimal places
+            $dotProduct += round($vectorA[$i], 4) * round($vectorB[$i], 4);
         }
         return $dotProduct;
     }

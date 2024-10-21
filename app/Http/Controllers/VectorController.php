@@ -182,8 +182,9 @@ class VectorController extends Controller
         $topResults = [];
 
         // Process vectors in chunks to avoid loading all into memory
-        Vector::chunk(1000, function ($vectors) use ($normalizedVector, &$topResults, $topN) {
+        Vector::chunk(5000, function ($vectors) use ($normalizedVector, &$topResults, $topN) {
             foreach ($vectors as $vectorData) {
+                Log::info('Processing vector ID: ' . $vectorData->id);
                 $storedNormalizedVector = $vectorData->normalized_vector; // Assuming this is stored in your database
                 $similarity = Vector::cosineSimilarity($normalizedVector, $storedNormalizedVector);
 

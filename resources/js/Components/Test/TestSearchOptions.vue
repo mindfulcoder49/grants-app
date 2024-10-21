@@ -36,18 +36,18 @@
           class="form-input w-24 border border-gray-300 rounded-md"
         />
       </div>
-
-        <!-- Top N Section -->
-        <div class="flex items-center space-x-4 mt-4">
-            <label class="font-medium">Top N:</label>
-            <input
-                type="number"
-                v-model.number="localTopN"
-                min="1"
-                max="200"
-                class="form-input w-24 border border-gray-300 rounded-md"
-            />
-        </div>
+  
+      <!-- Top N Section -->
+      <div class="flex items-center space-x-4 mt-4">
+        <label class="font-medium">Top N:</label>
+        <input
+          type="number"
+          v-model.number="localTopN"
+          min="1"
+          max="200"
+          class="form-input w-24 border border-gray-300 rounded-md"
+        />
+      </div>
   
       <!-- Hamming Mode Section -->
       <div class="flex items-center space-x-4 mt-4">
@@ -106,40 +106,40 @@
         default: 5,
       },
     },
-    data() {
-      return {
-        localSelectedSearchTypes: [...this.selectedSearchTypes],
-        localSelectedHammingModes: [...this.selectedHammingModes],
-        localTopCentroids: this.topCentroids,
-        localTopN: this.topN,
-      };
-    },
-    watch: {
-      localSelectedSearchTypes(newVal) {
-        this.$emit('update:selectedSearchTypes', newVal);
-      },
-      localSelectedHammingModes(newVal) {
-        this.$emit('update:selectedHammingModes', newVal);
-      },
-      localTopCentroids(newVal) {
-        this.$emit('update:topCentroids', newVal);
-      },
-        localTopN(newVal) {
-            this.$emit('update:topN', newVal);
+    computed: {
+      localSelectedSearchTypes: {
+        get() {
+          return this.selectedSearchTypes;
         },
-      selectedSearchTypes(newVal) {
-        this.localSelectedSearchTypes = [...newVal];
+        set(newVal) {
+          this.$emit('update:selectedSearchTypes', newVal);
+        }
       },
-      selectedHammingModes(newVal) {
-        this.localSelectedHammingModes = [...newVal];
-      },
-      topCentroids(newVal) {
-        this.localTopCentroids = newVal;
-      },
-        topN(newVal) {
-            this.localTopN = newVal;
+      localSelectedHammingModes: {
+        get() {
+          return this.selectedHammingModes;
         },
-    },
+        set(newVal) {
+          this.$emit('update:selectedHammingModes', newVal);
+        }
+      },
+      localTopCentroids: {
+        get() {
+          return this.topCentroids;
+        },
+        set(newVal) {
+          this.$emit('update:topCentroids', newVal);
+        }
+      },
+      localTopN: {
+        get() {
+          return this.topN;
+        },
+        set(newVal) {
+          this.$emit('update:topN', newVal);
+        }
+      }
+    }
   };
   </script>
   
