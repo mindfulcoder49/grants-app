@@ -29,6 +29,10 @@ Route::get('/search-test', function () {
     return Inertia::render('SearchTest');
 })->name('search.test');
 
+Route::get('/centroid-test', function () {
+    return Inertia::render('SearchCentroidTest');
+})->name('centroid.test');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/', [GrantsController::class, 'search'])->name('search');
 Route::post('/search', [GrantsController::class, 'search'])->name('search');
