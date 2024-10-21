@@ -46,7 +46,7 @@
       </div>
   
       <!-- Results Display -->
-      <div v-if="!loading && results.length" class="results-display mt-8">
+      <div v-if="results.length" class="results-display mt-8">
         <h2 class="text-xl font-bold mb-4">Search Results</h2>
         <ul>
           <li v-for="result in results" :key="result.term">
@@ -56,7 +56,7 @@
               <div class="scrolling-row">
                 <div v-for="grant in result.grants" :key="grant.id" class="flex flex-col">
                   <span class="font-bold flex-column ">{{ grant.id }}</span> 
-                  <span >{{ grant.similarity.toFixed(2) * 100 }}%</span>
+                  <span>{{ (grant.similarity * 100).toFixed(2) }}%</span>
                 </div>
               </div>
             </div>
