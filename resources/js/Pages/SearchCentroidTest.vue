@@ -148,8 +148,14 @@
               const vectorResponse = await axios.post('/search', vectorPayload);
               const vectorEndTime = performance.now();
               const vectorTimeTaken = vectorEndTime - vectorStartTime;
-  
-              this.vectorResult = `Term: ${term}, Top Result: ${vectorResponse.data.grants[0]?.id}, Time Taken: ${vectorTimeTaken} ms`;
+              // Store the result for the full vector search
+              this.results.push({
+                term,
+                centroidsSearched: 'Full Vector Search',
+                timeTaken: vectorTimeTaken,
+                grants: vectorResponse.data.grants.map(grant => grant.id), // Store grant ids
+              });
+
             }
           }
         } catch (error) {
