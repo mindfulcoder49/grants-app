@@ -4,7 +4,7 @@
 
       <!-- Refined search_type and top_centroid inputs aligned with Tailwind CSS -->
       <div class="flex flex-col items-center space-y-6">
-        <!-- Search Type Section -->
+        <!-- Search Type Section 
         <div class="flex items-center space-x-4">
           <label for="search_type" class="font-medium">Search Type:</label>
           <div id="search_type" class="flex items-center space-x-4">
@@ -17,14 +17,14 @@
                &nbsp Vector
             </label>
           </div>
-        </div>
+        </div> -->
 
         <!-- Top Centroids Section -->
         <div class="flex items-center space-x-4" v-show="search_type === 'centroid'">
           <label for="top_centroids" class="font-medium">Top Centroids (1-200):</label>
           <input type="number" id="top_centroids" name="top_centroids" v-model="top_centroids" min="1" max="200" class="form-input w-24 border border-gray-300 rounded-md">
         </div>
-        <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid-->
+        <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid
         <div class="flex items-center space-x-4" >
           <label for="hamming_mode" class="font-medium">Search Mode: (Distance Comparison)</label>
           <div id="hamming_mode" class="flex items-center space-x-4">
@@ -44,6 +44,7 @@
             </label>
           </div>
         </div>
+        -->
 
       </div>
 
@@ -64,7 +65,8 @@
       return {
         search_type: 'centroid', // Default search type
         top_centroids: 5, // Default top centroids
-        hamming_mode: 'hybrid', // Default hamming mode
+        hamming_mode: 'cosine', // Default hamming mode
+        centroid_async: true, // Default centroid async
       };
     },
     methods: {
@@ -74,6 +76,7 @@
           search_type: this.search_type,
           top_centroids: this.top_centroids,
           hamming_mode: this.hamming_mode,
+          centroid_async: this.centroid_async,
         };
 
         // Emit search event with data directly from prop

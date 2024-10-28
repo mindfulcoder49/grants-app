@@ -47,13 +47,13 @@
     
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container">
-      <div v-if="$page.props.grants != null" class="results-header">
+      <div v-if="grants != null" class="results-header">
         Relevant Grants
       </div>
       <div class="results-content">
         <!-- Pass selectedGrants to GrantList -->
         <GrantList
-          :grants="$page.props.grants"
+          :grants="grants"
           :addedGrants="selectedGrants.map(g => g.id)"  
           class="grant-list"
           @add-to-ai-conversation="addSelectedGrant"
@@ -82,6 +82,7 @@ export default {
       buttonText: 'SEARCH FOR GRANTS',
       activeTab: 'govgrants', // Default to GovGrants tab being active
       loadingVectorSearch: true, // Track if the vector search is loading
+      grants: [],
     };
   },
   props: {
@@ -89,57 +90,88 @@ export default {
       type: String,
       default: '',
     },
-    grants: {
-      type: Array,
-      default: () => [],
-    },
   },
   methods: {
-    performSearch(searchPayload) {
-      this.searchPerformed = true;
-      this.buttonText = 'SEARCHING...';
-      this.loadingVectorSearch = true;  // Start loading vector search
-
-      // Trigger both searches in parallel
-      this.$inertia.post('/', { ...searchPayload }, {
-        preserveScroll: true,
-        onSuccess: () => {
-          this.buttonText = 'SEARCH FOR GRANTS';  
-          this.loadingVectorSearch = false;  
-        },
-        onError: () => {
-          this.loadingVectorSearch = false; 
-        }
-      });
-
-      // Trigger native search at the same time
-      this.$nextTick(() => {
-        if (this.$refs.govGrantsSearch) {
-          this.$refs.govGrantsSearch.searchGrantsGov();
-        }
-      });
-    },
-    async addSelectedGrant(grant) {
-      // Check if the grant is already selected
-      
-        this.selectedGrants.push(grant);
-
-        // Make an API call to save the grant info if the user is authenticated
-        try {
-          const response = await axios.post('/saved-grants', {
-            grant: JSON.stringify(grant),
-          });
-          console.log('Grant saved successfully:', response.data.message);
-        } catch (error) {
-          console.error('Failed to save grant:', error.response ? error.response.data : error.message);
-        }
-      
-    },
-    removeSelectedGrant(grantId) {
-      // Remove the grant by its ID from the selectedGrants array
-      this.selectedGrants = this.selectedGrants.filter(g => g.id !== grantId);
-    },
+    insertSortedGrant(grant) {
+    // Insert grant in sorted order by matchScore
+    let index = this.grants.findIndex(g => g.similarity < grant.similarity);
+    if (index === -1) index = this.grants.length; // Insert at the end if no lower matchScore is found
+    this.grants.splice(index, 0, grant);
   },
+
+  async performSearch(searchPayload) {
+    this.searchPerformed = true;
+    this.loadingVectorSearch = true;
+    this.grants = [];
+
+    try {
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 
+        },
+        body: JSON.stringify(searchPayload),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = '';
+
+      let { value, done } = await reader.read();
+      while (!done) {
+        buffer += decoder.decode(value, { stream: true });
+
+        let lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const grant = JSON.parse(line);
+              this.insertSortedGrant(grant); // Use sorted insertion
+            } catch (err) {
+              console.error('JSON parse error for line:', err);
+            }
+          }
+        }
+        ({ value, done } = await reader.read());
+      }
+
+      if (buffer.trim()) {
+        try {
+          const grant = JSON.parse(buffer);
+          this.insertSortedGrant(grant); // Final sorted insertion
+        } catch (err) {
+          console.error('Final JSON parse error:', err);
+        }
+      }
+    } finally {
+      this.loadingVectorSearch = false;
+    }
+  },
+  
+
+  async addSelectedGrant(grant) {
+    if (!this.selectedGrants.some(g => g.id === grant.id)) {
+      this.selectedGrants.push(grant);
+
+      try {
+        const response = await axios.post('/saved-grants', {
+          grant: JSON.stringify(grant),
+        });
+        console.log('Grant saved successfully:', response.data.message);
+      } catch (error) {
+        console.error('Failed to save grant:', error.response ? error.response.data : error.message);
+      }
+    }
+  },
+
+  removeSelectedGrant(grantId) {
+    this.selectedGrants = this.selectedGrants.filter(g => g.id !== grantId);
+  },
+},
+
   watch: {
     grants(newGrants) {
       if (newGrants.length > 0) {

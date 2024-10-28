@@ -33,20 +33,29 @@ class CentroidController extends Controller
             'vector'        => 'required|array',
             'top_centroids' => 'integer|min:1',
             'topN'          => 'integer|min:1',
+            'single_centroid' => 'integer|nullable', // Optional single centroid ID
         ]);
+
 
         $queryVector = $validated['vector'];
         $normalizedVector = Vector::normalize($queryVector);
         $top_centroids = $validated['top_centroids'] ?? 5;
         $topN = $validated['topN'] ?? 10;
+        $single_centroid = $validated['single_centroid'] ?? -1;
+        $vectorsInCentroids = [];
 
-        // Step 1: Find the closest centroids
-        Log::info('Finding closest centroids');
-        $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
+        if ($single_centroid > -1 ) {
+            Log::info('Retrieving vectors from a single centroid: ' . $single_centroid);
+            $vectorsInCentroids = $this->getVectorsFromCentroidIds([$single_centroid]);
+        } else {
+            // Step 1: Find the closest centroids
+            Log::info('Finding closest centroids');
+            $closestCentroids = $this->findClosestCentroids($normalizedVector, $top_centroids);
 
-        // Step 2: Retrieve vectors from these centroids
-        Log::info('Retrieving vectors from centroids');
-        $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
+            // Step 2: Retrieve vectors from these centroids
+            Log::info('Retrieving vectors from centroids');
+            $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
+        }
 
         // Step 3: Calculate cosine similarity
         Log::info('Calculating cosine similarity');
@@ -165,6 +174,23 @@ class CentroidController extends Controller
         return $vectors;
     }
 
+        /**
+     * Helper method to retrieve vectors from given centroids with just ints
+     */
+    private function getVectorsFromCentroidIDs($centroidIds)
+    {
+        // Step 1: Retrieve vector IDs associated with the given centroids
+        $vectorIds = DB::table('grant_vector')
+            ->whereIn('centroid_id', $centroidIds)
+            ->pluck('vector_id')
+            ->unique();
+
+        // Step 2: Retrieve the Vector models using Eloquent
+        $vectors = Vector::whereIn('id', $vectorIds)->get();
+
+        return $vectors;
+    }
+
 
     /**
      * Helper method to retrieve vectors by their IDs.
@@ -184,7 +210,7 @@ class CentroidController extends Controller
         foreach ($vectorsInCentroid->chunk($chunkSize) as $vectorChunk) {
             foreach ($vectorChunk as $vectorRecord) {
                 if ($method === 'cosine') {
-                    Log::info('Calculating cosine similarity');
+                    //Log::info('Calculating cosine similarity');
                     $vector = $vectorRecord->normalized_vector; // Convert JSON string to array
                     $similarity = Vector::cosineSimilarity($queryVector, $vector);
                 } elseif ($method === 'hamming') {

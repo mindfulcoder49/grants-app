@@ -14,6 +14,7 @@ use App\Models\Centroid;
 use App\Http\Controllers\CentroidController;
 use App\Models\Vector;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GrantsController extends Controller
 {
@@ -37,6 +38,8 @@ class GrantsController extends Controller
             'hamming_mode'  => 'string|nullable',
             'testMode'    => 'boolean|nullable',
             'topN'          => 'integer|nullable',
+            'centroid_async' => 'boolean|nullable',
+            'percentageToRefine' => 'numeric|nullable',
         ]);
 
         // Log the incoming search request
@@ -54,51 +57,100 @@ class GrantsController extends Controller
         // Log the actual search term being used
         Log::info('Searching with term: ' . $searchTerm);
 
-        try {
-            $searchType = $request->input('search_type');
-            $topN = $request->input('topN', 2000);
-            $top_centroids = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 5;
-            $useHamming = $request->input('hamming_mode', 'hybrid');
-            $results = $this->performSearch($searchTerm, $searchType, $topN, $useHamming, $top_centroids);
-        } catch (\Exception $e) {
-            // Log the exception if search fails
-            Log::error('Search failed.', ['error' => $e->getMessage()]);
+        // Step 1: Embed the search term into a vector
+        $embedding = $this->embedText($searchTerm);
+
+        $normalizedVector = Vector::normalize($embedding);
+
+        $centroid_async = $request->input('centroid_async', false);
+        $searchType = $request->input('search_type');
+        $topN = $request->input('topN', 2000);
+        $top_centroids = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 5;
+        $useHamming = $request->input('hamming_mode', 'hybrid');
+        $single_centroid = $request->input('single_centroid', -1);
+        $percentageToRefine = $request->input('percentageToRefine', 1);
+
+        if (!$centroid_async) {
+
+            try {
+                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid);
+            } catch (\Exception $e) {
+                // Log the exception if search fails
+                Log::error('Search failed.', ['error' => $e->getMessage()]);
+                return Inertia::render('Home', [
+                    'grants'     => [],
+                    'searchTerm' => $searchTerm,
+                    'error'      => $e->getMessage()
+                ]);
+            }
+
+            // Log the number of results found
+            Log::info('Search results found.', ['count' => $results->count()]);
+
+            //take topN results
+            $results = $results->take($topN);
+
+            if ($request->input('testMode')) {
+                // If test mode is enabled, return the results as JSON the same way the API would
+                return response()->json(['grants' => $results->values()->toArray()]);
+            }
+
+            // Pass the results to the Inertia page along with the search term
             return Inertia::render('Home', [
-                'grants'     => [],
-                'searchTerm' => $searchTerm,
-                'error'      => $e->getMessage()
+                'grants'     => $results->values()->toArray(),
+                'searchTerm' => $searchTerm
             ]);
+        } else {
+
+            Log::info('Searching asynchronously with term: ' . $searchTerm);
+            //get the closest centroid array
+            $myCentroidController = new CentroidController();    
+
+            Log::info('Finding closest centroids');
+
+            $closestCentroids = $myCentroidController->findClosestCentroids($normalizedVector, $top_centroids);
+
+            Log::info('Found closest centroids', ['count' => count($closestCentroids)]);
+
+            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine) {
+                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine);
+            });
+
+
+
         }
 
-        // Log the number of results found
-        Log::info('Search results found.', ['count' => $results->count()]);
-
-        //take topN results
-        $results = $results->take($topN);
-
-        if ($request->input('testMode')) {
-            // If test mode is enabled, return the results as JSON the same way the API would
-            return response()->json(['grants' => $results->values()->toArray()]);
-        }
-
-        // Pass the results to the Inertia page along with the search term
-        return Inertia::render('Home', [
-            'grants'     => $results->values()->toArray(),
-            'searchTerm' => $searchTerm
-        ]);
     }
+
+    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine) {
+        foreach ($closestCentroids as $centroid) {
+            $centroidID = $centroid['id'];
+            try {
+                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID);
+                
+                foreach ($centroidGrants as $grant) {
+                    echo json_encode($grant) . "\n"; // Output each grant JSON object followed by a newline
+                    ob_flush();
+                    flush();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error in search.', ['error' => $e->getMessage()]);
+            }
+        }
+    }
+    
+    
 
     /**
      * Perform a search (vector or centroid) using the embedded search term.
      */
-    public function performSearch($searchTerm, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5)
+    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1)
     {
         try {
-            // Step 1: Embed the search term into a vector
-            $embedding = $this->embedText($searchTerm);
+
 
             // Step 2: Retrieve similar vectors
-            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids);
+            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid);
 
             if (empty($similarVectors)) {
                 throw new \Exception("No similar vectors found.");
@@ -138,7 +190,7 @@ class GrantsController extends Controller
     /**
      * Retrieve similar vectors based on the search type.
      */
-    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1)
+    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1)
     {
         if ($searchType === 'centroid') {
             // Instantiate the CentroidController
@@ -149,6 +201,7 @@ class GrantsController extends Controller
                 'vector'        => $embedding,
                 'top_centroids' => $top_centroids,
                 'topN'          => $topN,
+                'single_centroid' => $single_centroid,
             ];
     
             // Add percentageToRefine if using hybrid search
