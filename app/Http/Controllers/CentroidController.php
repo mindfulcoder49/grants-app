@@ -34,6 +34,7 @@ class CentroidController extends Controller
             'top_centroids' => 'integer|min:1',
             'topN'          => 'integer|min:1',
             'single_centroid' => 'integer|nullable', // Optional single centroid ID
+            'scope'         => 'string|nullable', // Optional scope for filtering vectors
         ]);
 
 
@@ -43,10 +44,12 @@ class CentroidController extends Controller
         $topN = $validated['topN'] ?? 10;
         $single_centroid = $validated['single_centroid'] ?? -1;
         $vectorsInCentroids = [];
+        $scope = $validated['scope'] ?? 'all';
 
         if ($single_centroid > -1 ) {
             Log::info('Retrieving vectors from a single centroid: ' . $single_centroid);
-            $vectorsInCentroids = $this->getVectorsFromCentroidIds([$single_centroid]);
+            $my_centroid = Centroid::find($single_centroid);
+            $vectorsInCentroids = $this->getVectorsFromCentroids([$my_centroid], $scope);
         } else {
             // Step 1: Find the closest centroids
             Log::info('Finding closest centroids');
@@ -54,7 +57,7 @@ class CentroidController extends Controller
 
             // Step 2: Retrieve vectors from these centroids
             Log::info('Retrieving vectors from centroids');
-            $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids);
+            $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids, $scope);
         }
 
         // Step 3: Calculate cosine similarity
@@ -157,39 +160,43 @@ class CentroidController extends Controller
 
     /**
      * Helper method to retrieve vectors from given centroids.
+     * The getVectorsFromCentroids function retrieves Vector models based 
+     * on specified centroids and optional filtering criteria (scope) on 
+     * associated grants data. This allows for fetching only relevant vectors 
+     * depending on grant conditions, such as open opportunities or keyword 
+     * matching in titles.
      */
-    private function getVectorsFromCentroids($centroids)
+    private function getVectorsFromCentroids($centroids, $scope = 'all')
     {
         $centroidIds = array_column($centroids, 'id');
 
-        // Step 1: Retrieve vector IDs associated with the given centroids
-        $vectorIds = DB::table('grant_vector')
-            ->whereIn('centroid_id', $centroidIds)
-            ->pluck('vector_id')
-            ->unique();
+        // Step 1: Initialize the query for vector IDs associated with the centroids
+        $vectorQuery = DB::table('grant_vector')
+            ->join('grants', 'grant_vector.grant_id', '=', 'grants.id')
+            ->whereIn('grant_vector.centroid_id', $centroidIds);
 
-        // Step 2: Retrieve the Vector models using Eloquent
+        // Step 2: Apply scope filters
+        if ($scope === 'open') {
+            Log::info('Filtering by open opportunities');
+            
+            // Exclude grants with null close dates and filter for dates in the future
+            $vectorQuery->whereNotNull('grants.close_date')
+                        ->where('grants.close_date', '>', now());
+        } elseif ($scope === 'keyword') {
+            // Example: filter by keyword in the opportunity title
+            $vectorQuery->where('grants.opportunity_title', 'LIKE', '%your_keyword%');
+        }
+
+        // Step 3: Retrieve the unique vector IDs after filtering
+        $vectorIds = $vectorQuery->pluck('vector_id')->unique();
+
+        // Step 4: Retrieve the Vector models
         $vectors = Vector::whereIn('id', $vectorIds)->get();
 
         return $vectors;
     }
 
-        /**
-     * Helper method to retrieve vectors from given centroids with just ints
-     */
-    private function getVectorsFromCentroidIDs($centroidIds)
-    {
-        // Step 1: Retrieve vector IDs associated with the given centroids
-        $vectorIds = DB::table('grant_vector')
-            ->whereIn('centroid_id', $centroidIds)
-            ->pluck('vector_id')
-            ->unique();
-
-        // Step 2: Retrieve the Vector models using Eloquent
-        $vectors = Vector::whereIn('id', $vectorIds)->get();
-
-        return $vectors;
-    }
+    
 
 
     /**

@@ -17,18 +17,19 @@
     <!-- Tabs for selecting which search result to display -->
     <div class="tabs">
       <button 
+        :class="{ active: activeTab === 'vectorSearch', inactive: activeTab !== 'vectorSearch'}" 
+        class = "vector-search-button"
+        @click="activeTab = 'vectorSearch'">
+        Semantic Meaning Vector Search
+      </button>
+      <button 
         :class="{ active: activeTab === 'govgrants', inactive: activeTab !== 'govgrants' }"
         @click="activeTab = 'govgrants'">
         Keyword Search
       </button>
 
       
-      <button 
-        :class="{ active: activeTab === 'vectorSearch', inactive: activeTab !== 'vectorSearch'}" 
-        class = "vector-search-button"
-        @click="activeTab = 'vectorSearch'">
-        Semantic Meaning Vector Search
-      </button>
+
       <span v-if="loadingVectorSearch" class="loading-spinner"></span>
       
 
@@ -80,7 +81,7 @@ export default {
       govgrants: [],  // Store all the loaded government grant data here
       selectedGrants: [],  // Store selected grants here
       buttonText: 'SEARCH FOR GRANTS',
-      activeTab: 'govgrants', // Default to GovGrants tab being active
+      activeTab: 'vectorSearch', // Default to GovGrants tab being active
       loadingVectorSearch: true, // Track if the vector search is loading
       grants: [],
     };

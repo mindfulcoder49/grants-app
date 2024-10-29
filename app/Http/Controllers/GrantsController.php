@@ -40,6 +40,7 @@ class GrantsController extends Controller
             'topN'          => 'integer|nullable',
             'centroid_async' => 'boolean|nullable',
             'percentageToRefine' => 'numeric|nullable',
+            'open_only'     => 'boolean|nullable',
         ]);
 
         // Log the incoming search request
@@ -70,10 +71,14 @@ class GrantsController extends Controller
         $single_centroid = $request->input('single_centroid', -1);
         $percentageToRefine = $request->input('percentageToRefine', 1);
 
+        $open_only = $request->input('open_only', false);
+
+        $scope = $open_only ? 'open' : 'all';
+
         if (!$centroid_async) {
 
             try {
-                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid);
+                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scope);
             } catch (\Exception $e) {
                 // Log the exception if search fails
                 Log::error('Search failed.', ['error' => $e->getMessage()]);
@@ -112,8 +117,8 @@ class GrantsController extends Controller
 
             Log::info('Found closest centroids', ['count' => count($closestCentroids)]);
 
-            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine) {
-                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine);
+            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope) {
+                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope);
             });
 
 
@@ -122,11 +127,11 @@ class GrantsController extends Controller
 
     }
 
-    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine) {
+    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope) {
         foreach ($closestCentroids as $centroid) {
             $centroidID = $centroid['id'];
             try {
-                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID);
+                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID, $scope);
                 
                 foreach ($centroidGrants as $grant) {
                     echo json_encode($grant) . "\n"; // Output each grant JSON object followed by a newline
@@ -144,13 +149,13 @@ class GrantsController extends Controller
     /**
      * Perform a search (vector or centroid) using the embedded search term.
      */
-    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1)
+    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scope = 'all')
     {
         try {
 
 
             // Step 2: Retrieve similar vectors
-            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid);
+            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scope);
 
             if (empty($similarVectors)) {
                 throw new \Exception("No similar vectors found.");
@@ -190,7 +195,7 @@ class GrantsController extends Controller
     /**
      * Retrieve similar vectors based on the search type.
      */
-    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1)
+    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scope = 'all')
     {
         if ($searchType === 'centroid') {
             // Instantiate the CentroidController
@@ -202,6 +207,7 @@ class GrantsController extends Controller
                 'top_centroids' => $top_centroids,
                 'topN'          => $topN,
                 'single_centroid' => $single_centroid,
+                'scope'         => $scope,
             ];
     
             // Add percentageToRefine if using hybrid search

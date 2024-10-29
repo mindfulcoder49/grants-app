@@ -1,47 +1,51 @@
 <template>
-    <!-- Input template with placeholder -->
-    <input type="text" placeholder="Enter a description of your company" v-model="companyDescription" />
-  </template>
-  
-  <script>
-  export default {
-    name: 'SearchInput',
-    data() {
-      return { companyDescription: '' };
+  <!-- Textarea with auto-grow functionality -->
+  <textarea
+    placeholder="Enter a description of your company"
+    v-model="companyDescription"
+    @input="adjustHeight"
+    ref="inputField"
+  />
+</template>
+
+<script>
+export default {
+  name: 'SearchInput',
+  data() {
+    return {
+      companyDescription: '',
+    };
+  },
+  methods: {
+    adjustHeight() {
+      // Reset height to auto, then set height based on scrollHeight
+      this.$refs.inputField.style.height = "auto";
+      this.$refs.inputField.style.height = `${this.$refs.inputField.scrollHeight}px`;
     },
-  };
-  </script>
-  
+  },
+};
+</script>
 
-  <style scoped>
-    /* Scoped CSS */
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      margin: 0.5rem 0;
-      font-size: 1rem;
-      border-radius: 0.25rem;
-    }
-
-    /* Responsive Input and Button Styles */
-input[type="text"] {
-  display: block;
-  padding: 0.5rem;
-  margin: auto;
-  font-size: 1.5rem;
-  border-radius: 1rem;
+<style scoped>
+textarea {
   width: 80%;
   max-width: 500px;
+  padding: 0.5rem;
+  margin: 0.5rem auto;
+  font-size: 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #c000;
   text-align: center;
-  /* change the color of the placeholder text */
   color: #111;
+  display: block;
+  resize: none; /* Disable manual resizing */
+  overflow: hidden; /* Hide scrollbars */
+  line-height: 1.5cap;
 }
 
-/* change the color of the placeholder text */
-input[type="text"]::placeholder {
-    color: #76685b;
-    font-style: italic;
+/* Placeholder styling */
+textarea::placeholder {
+  color: #76685b;
+  font-style: italic;
 }
-
-    </style>
+</style>
