@@ -27,6 +27,16 @@
             </option>
           </select>
         </div>
+
+        <!-- Show Funding Activity Type Dropdown if Field is 'funding_activity_type', otherwise show Keyword Input -->
+        <div v-else-if="search.field === 'category_of_funding_activity'" class="p-2 border
+        rounded w-full">
+          <select v-model="search.value" class="w-full">
+            <option v-for="(label, code) in fundingActivityTypes" :key="code" :value="code">
+              {{ code }} - {{ label }}
+            </option>
+          </select>
+        </div>
         
         <div v-else class="w-full p-2 border rounded">
           <input v-model="search.value" placeholder="Enter keyword" class="w-full" />
@@ -74,6 +84,32 @@
           '22': 'For-profit organizations other than small businesses',
           '23': 'Small businesses',
           '25': 'Others'
+        },
+        fundingActivityTypes: {
+            'ACA': 'Affordable Care Act',
+            'AG': 'Agriculture',
+            'AR': 'Arts',
+            'BC': 'Business and Commerce',
+            'CD': 'Community Development',
+            'CP': 'Consumer Protection',
+            'DPR': 'Disaster Prevention and Relief',
+            'ED': 'Education',
+            'ELT': 'Employment, Labor and Training',
+            'EN': 'Energy',
+            'ENV': 'Environment',
+            'FN': 'Food and Nutrition',
+            'HL': 'Health',
+            'HO': 'Housing',
+            'HU': 'Humanities',
+            'ISS': 'Income Security and Social Services',
+            'IS': 'Information and Statistics',
+            'LJL': 'Law, Justice and Legal Services',
+            'NR': 'Natural Resources',
+            'RA': 'Recovery Act',
+            'RD': 'Regional Development',
+            'ST': 'Science and Technology',
+            'T': 'Transportation',
+            'O': 'Other',
         }
       };
     },

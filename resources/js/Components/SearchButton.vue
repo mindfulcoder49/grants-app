@@ -19,20 +19,23 @@
           </div>
         </div> -->
 
-        <!-- Top Centroids Section -->
+        <!-- Top Centroids Section 
         <div class="flex items-center space-x-4" v-show="search_type === 'centroid'">
           <label for="top_centroids" class="font-medium">Top Centroids (1-200):</label>
           <input type="number" id="top_centroids" name="top_centroids" v-model="top_centroids" min="1" max="200" class="form-input w-24 border border-gray-300 rounded-md">
         </div>
+        -->
 
         <!-- Open Only checkbox -->
         <div class="flex items-center space-x-4">
-          <label for="open_only" class="font-medium">Search only for grants currently accepting applications:</label>
-          <div class="flex items-center space-x-4">
+          <div class="flex-col items-center space-y-4">
             <label for="open_only" class="border border-gray-600 rounded-md space-x-4 p-2">
+              Search only for grants currently accepting applications &nbsp 
               <input type="checkbox" id="open_only" name="open_only" v-model="open_only" class="form-checkbox">
-              &nbsp  Open Only
             </label>
+            <!--If open_only is false display a message that historical grant search is limited to two years for not logged in users -->
+            <div v-if="!open_only" class="text-sm text-blue-900">
+              Historical grant search is limited to the past two years. If you need more, let us know with the Help Us Improve button</div>
           </div>
         </div>
 
@@ -80,7 +83,7 @@
     data() {
       return {
         search_type: 'centroid', // Default search type
-        top_centroids: 5, // Default top centroids
+        top_centroids: 50, // Default top centroids
         hamming_mode: 'cosine', // Default hamming mode
         centroid_async: true, // Default centroid async
         open_only: true, // Default open only

@@ -179,17 +179,24 @@ class CentroidController extends Controller
         Log::info('Scopes: ' . json_encode($scopes));
         // Step 2: Loop through scopes and apply each filter
         foreach ($scopes as $scope) {
-            if (is_string($scope)) {
+            if (is_array($scope) && isset($scope['scope']) && $scope['scope'] != 'keyword') {
                 // Handle simple name-only scope
-                switch ($scope) {
+                
+                switch ($scope['scope']) {
                     case 'open':
                         Log::info('Filtering by open opportunities');
                         $vectorQuery->whereNotNull('grants.close_date')
                                     ->where('grants.close_date', '>', now());
                         break;
                     // Add more name-only scopes as needed
+                    case 'all':
+                        // If 'all' or unrecognized scope, filter be close date less than two years ago
+                        Log::info('Filtering by all opportunities open or closed weithin last 2 years');
+                        $vectorQuery->whereNotNull('grants.close_date')
+                                    ->where('grants.close_date', '>', now()->subYears(2));
+                        break;
                     default:
-                        // If 'all' or unrecognized scope, no specific filter applied
+                        Log::info('Unrecognized scope: ' . $scope['scope']);
                         break;
                 }
             } elseif (is_array($scope) && isset($scope['scope']) && $scope['scope'] === 'keyword') {
