@@ -81,7 +81,7 @@
     data() {
       return {
         search_type: 'centroid', // Default search type
-        top_centroids: 50, // Default top centroids
+        top_centroids: 200, // Default top centroids
         hamming_mode: 'cosine', // Default hamming mode
         centroid_async: true, // Default centroid async
         open_only: true, // Default open only
