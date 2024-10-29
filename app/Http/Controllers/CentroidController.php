@@ -172,7 +172,7 @@ class CentroidController extends Controller
 
         // Step 1: Initialize the query for vector IDs associated with the centroids
         $vectorQuery = DB::table('grant_vector')
-            ->join('grants', 'grant_vector.grant_id', '=', 'grants.id')
+            ->join('grants', 'grant_vector.opportunity_id', '=', 'grants.opportunity_id')
             ->whereIn('grant_vector.centroid_id', $centroidIds);
 
         // Step 2: Apply scope filters
