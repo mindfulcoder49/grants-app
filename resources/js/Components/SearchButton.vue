@@ -1,6 +1,6 @@
 <template>
     <!-- Button template -->
-    <button @click="searchGrants">{{ buttonText }}</button>
+      <button @click="searchGrants">{{ buttonText }}</button>
 
       <!-- Refined search_type and top_centroid inputs aligned with Tailwind CSS -->
       <div class="flex flex-col items-center space-y-6">
@@ -27,16 +27,14 @@
         -->
 
         <!-- Open Only checkbox -->
-        <div class="flex items-center space-x-4">
-          <div class="flex-col items-center space-y-4">
+        <div class="items-center space-y-4">
             <label for="open_only" class="border border-gray-600 rounded-md space-x-4 p-2">
               Search only for grants currently accepting applications &nbsp 
-              <input type="checkbox" id="open_only" name="open_only" v-model="open_only" class="form-checkbox">
+              <input type="checkbox" id="open_only" name="open_only" v-model="open_only" class="form-checkbox" />
             </label>
-            <!--If open_only is false display a message that historical grant search is limited to two years for not logged in users -->
-            <div v-if="!open_only" class="text-sm text-blue-900">
-              Historical grant search is limited to the past two years. If you need more, let us know with the Help Us Improve button</div>
-          </div>
+        </div>
+        <div v-if="!open_only" class="flex text-sm text-blue-900 text-center">
+              Historical grant search is limited to the past two years. If you need more, let us know with the Help Us Improve button
         </div>
 
         <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid

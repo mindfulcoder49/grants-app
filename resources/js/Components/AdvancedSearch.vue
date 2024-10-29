@@ -47,7 +47,7 @@
       <button 
         v-if="fields.length < 10" 
         @click="addField" 
-        class="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        class="mb-4 px-4 py-2 bg-[#004aad] text-white rounded hover:bg-blue-600 transition"
       >
         + Add Field
       </button>
