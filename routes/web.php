@@ -42,6 +42,7 @@ Route::get('/update', [SiteInfoController::class, 'update'])->name('update');
 
 Route::get('/api/last-update', [SiteInfoController::class, 'getLastUpdate']);
 Route::post('/api/ai-chat', [AiAssistantController::class, 'handleRequest'])->name('ai.assistant');
+Route::get('/api/search-fields', [GrantsController::class, 'getSearchFields'])->name('search.fields');
 
 /*
 Route::get('/', function () {

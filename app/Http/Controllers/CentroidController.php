@@ -34,7 +34,7 @@ class CentroidController extends Controller
             'top_centroids' => 'integer|min:1',
             'topN'          => 'integer|min:1',
             'single_centroid' => 'integer|nullable', // Optional single centroid ID
-            'scope'         => 'string|nullable', // Optional scope for filtering vectors
+            'scopes'         => 'array|nullable', // Optional scopes for filtering vectors
         ]);
 
 
@@ -44,12 +44,12 @@ class CentroidController extends Controller
         $topN = $validated['topN'] ?? 10;
         $single_centroid = $validated['single_centroid'] ?? -1;
         $vectorsInCentroids = [];
-        $scope = $validated['scope'] ?? 'all';
+        $scopes = $validated['scopes'] ?? [['scope' => 'all']];
 
         if ($single_centroid > -1 ) {
             Log::info('Retrieving vectors from a single centroid: ' . $single_centroid);
             $my_centroid = Centroid::find($single_centroid);
-            $vectorsInCentroids = $this->getVectorsFromCentroids([$my_centroid], $scope);
+            $vectorsInCentroids = $this->getVectorsFromCentroids([$my_centroid], $scopes);
         } else {
             // Step 1: Find the closest centroids
             Log::info('Finding closest centroids');
@@ -57,7 +57,7 @@ class CentroidController extends Controller
 
             // Step 2: Retrieve vectors from these centroids
             Log::info('Retrieving vectors from centroids');
-            $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids, $scope);
+            $vectorsInCentroids = $this->getVectorsFromCentroids($closestCentroids, $scopes);
         }
 
         // Step 3: Calculate cosine similarity
@@ -166,7 +166,7 @@ class CentroidController extends Controller
      * depending on grant conditions, such as open opportunities or keyword 
      * matching in titles.
      */
-    private function getVectorsFromCentroids($centroids, $scope = 'all')
+    private function getVectorsFromCentroids($centroids, $scopes = [['scope' => 'all']])
     {
         $centroidIds = array_column($centroids, 'id');
 
@@ -175,18 +175,38 @@ class CentroidController extends Controller
             ->join('grants', 'grant_vector.opportunity_id', '=', 'grants.opportunity_id')
             ->whereIn('grant_vector.centroid_id', $centroidIds);
 
-        // Step 2: Apply scope filters
-        if ($scope === 'open') {
-            Log::info('Filtering by open opportunities');
-            
-            // Exclude grants with null close dates and filter for dates in the future
-            $vectorQuery->whereNotNull('grants.close_date')
-                        ->where('grants.close_date', '>', now());
-        } elseif ($scope === 'keyword') {
-            // Example: filter by keyword in the opportunity title
-            $vectorQuery->where('grants.opportunity_title', 'LIKE', '%your_keyword%');
+        //Log scopes
+        Log::info('Scopes: ' . json_encode($scopes));
+        // Step 2: Loop through scopes and apply each filter
+        foreach ($scopes as $scope) {
+            if (is_string($scope)) {
+                // Handle simple name-only scope
+                switch ($scope) {
+                    case 'open':
+                        Log::info('Filtering by open opportunities');
+                        $vectorQuery->whereNotNull('grants.close_date')
+                                    ->where('grants.close_date', '>', now());
+                        break;
+                    // Add more name-only scopes as needed
+                    default:
+                        // If 'all' or unrecognized scope, no specific filter applied
+                        break;
+                }
+            } elseif (is_array($scope) && isset($scope['scope']) && $scope['scope'] === 'keyword') {
+                // Handle keyword scope with field and value
+                if (isset($scope['field'], $scope['value'])) {
+                    $field = $scope['field'];
+                    $value = $scope['value'];
+
+                    Log::info("Filtering by keyword on field '{$field}' with value '{$value}' using query: grants.{$field} LIKE %{$value}%");
+
+                    $vectorQuery->where("grants.{$field}", 'LIKE', '%' . $value . '%');
+                }
+            }
         }
 
+        //log the query
+        Log::info('Query: ' . $vectorQuery->toSql());
         // Step 3: Retrieve the unique vector IDs after filtering
         $vectorIds = $vectorQuery->pluck('vector_id')->unique();
 
@@ -195,6 +215,7 @@ class CentroidController extends Controller
 
         return $vectors;
     }
+
 
     
 

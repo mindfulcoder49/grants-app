@@ -12,6 +12,9 @@
   <SearchInput v-model="companyDescription" />
   <SearchButton :companyDescription="companyDescription" @search="performSearch" :buttonText="buttonText" />
 
+  <AdvancedSearch ref="advancedSearch" :initial-fields="advancedSearchFields" />
+
+
   <!-- Conditionally render content only after a search is performed -->
   <div v-if="searchPerformed">
     <!-- Tabs for selecting which search result to display -->
@@ -70,10 +73,11 @@ import SearchButton from '@/Components/SearchButton.vue';
 import AiAssistant from '@/Components/AiAssistant.vue';
 import GrantList from '@/Components/GrantList.vue';
 import GrantsGovSearch from '@/Components/GrantsGovSearch.vue';
+import AdvancedSearch from '@/Components/AdvancedSearch.vue';
 
 export default {
   name: 'HomeSection',
-  components: { SearchInput, SearchButton, AiAssistant, GrantList, GrantsGovSearch },
+  components: { SearchInput, SearchButton, AiAssistant, GrantList, GrantsGovSearch, AdvancedSearch },
   data() {
     return {
       companyDescription: this.searchTerm || '',
@@ -84,6 +88,7 @@ export default {
       activeTab: 'vectorSearch', // Default to GovGrants tab being active
       loadingVectorSearch: true, // Track if the vector search is loading
       grants: [],
+      advancedSearchFields: [],
     };
   },
   props: {
@@ -104,6 +109,13 @@ export default {
     this.searchPerformed = true;
     this.loadingVectorSearch = true;
     this.grants = [];
+
+
+    const advancedFields = this.$refs.advancedSearch.getFields();
+
+    if (advancedFields.length > 0) {
+      searchPayload.advancedFields = advancedFields;
+    }
 
     try {
       const response = await fetch('/', {

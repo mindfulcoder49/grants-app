@@ -20,6 +20,7 @@ class GrantsController extends Controller
 {
     protected $vectorController;
 
+
     public function __construct()
     {
         $this->vectorController = new VectorController();
@@ -41,6 +42,7 @@ class GrantsController extends Controller
             'centroid_async' => 'boolean|nullable',
             'percentageToRefine' => 'numeric|nullable',
             'open_only'     => 'boolean|nullable',
+            'advancedFields'    => 'array|nullable',
         ]);
 
         // Log the incoming search request
@@ -72,13 +74,40 @@ class GrantsController extends Controller
         $percentageToRefine = $request->input('percentageToRefine', 1);
 
         $open_only = $request->input('open_only', false);
+        $scopes = [];
 
-        $scope = $open_only ? 'open' : 'all';
+        if ($open_only) {
+            $scopes = [['scope' => 'open']];
+        } else {
+            $scopes = [['scope' => 'all']];
+        }
+        
+        if ($request->input('advancedFields')) {
+            //add the advanced fields to the scopes with a scope => keyword field along with the field/value fields from the request
+            foreach ($request->input('advancedFields') as $field) {
+
+                //compare to Grants::getSearchFields() to ensure the field is valid
+                if (!in_array($field['field'], Grant::getSearchFields())) {
+                    Log::error('Invalid search field.', ['field' => $field['field']]);
+                    return Inertia::render('Home', [
+                        'grants'     => [],
+                        'searchTerm' => $searchTerm,
+                        'error'      => 'Invalid search field: ' . $field['field']
+                    ]);
+                }
+
+                //truncate value to 255 characters
+                $field['value'] = substr($field['value'], 0, 255);
+                $scopes[] = ['scope' => 'keyword', 'field' => $field['field'], 'value' => $field['value']];
+            }
+        } 
+        
+        Log::info('Search scopes in GrantsController::search ', ['scopes' => $scopes]);
 
         if (!$centroid_async) {
 
             try {
-                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scope);
+                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scopes);
             } catch (\Exception $e) {
                 // Log the exception if search fails
                 Log::error('Search failed.', ['error' => $e->getMessage()]);
@@ -117,8 +146,8 @@ class GrantsController extends Controller
 
             Log::info('Found closest centroids', ['count' => count($closestCentroids)]);
 
-            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope) {
-                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope);
+            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes) {
+                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes);
             });
 
 
@@ -127,11 +156,11 @@ class GrantsController extends Controller
 
     }
 
-    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scope) {
+    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes) {
         foreach ($closestCentroids as $centroid) {
             $centroidID = $centroid['id'];
             try {
-                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID, $scope);
+                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID, $scopes);
                 
                 foreach ($centroidGrants as $grant) {
                     echo json_encode($grant) . "\n"; // Output each grant JSON object followed by a newline
@@ -149,13 +178,13 @@ class GrantsController extends Controller
     /**
      * Perform a search (vector or centroid) using the embedded search term.
      */
-    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scope = 'all')
+    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scopes = [['scope' => 'all']])
     {
         try {
 
 
             // Step 2: Retrieve similar vectors
-            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scope);
+            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scopes);
 
             if (empty($similarVectors)) {
                 throw new \Exception("No similar vectors found.");
@@ -195,7 +224,7 @@ class GrantsController extends Controller
     /**
      * Retrieve similar vectors based on the search type.
      */
-    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scope = 'all')
+    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scopes = [['scope' => 'all']])
     {
         if ($searchType === 'centroid') {
             // Instantiate the CentroidController
@@ -207,7 +236,7 @@ class GrantsController extends Controller
                 'top_centroids' => $top_centroids,
                 'topN'          => $topN,
                 'single_centroid' => $single_centroid,
-                'scope'         => $scope,
+                'scopes'         => $scopes,
             ];
     
             // Add percentageToRefine if using hybrid search
@@ -324,5 +353,10 @@ class GrantsController extends Controller
         Log::info('Grant information stored for user: ' . $user->email);
 
         return response()->json(['message' => 'Grant information saved successfully.']);
+    }
+
+    public function getSearchFields ( Request $request ) {
+        $fields = Grant::getSearchFields();
+        return response()->json($fields);
     }
 }
