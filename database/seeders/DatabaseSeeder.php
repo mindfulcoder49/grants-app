@@ -18,5 +18,6 @@ class DatabaseSeeder extends Seeder
         Artisan::call('grants:download-xml');
         Artisan::call('db:seed', ['--class' => 'GrantsTableSeeder']);
         Artisan::call('db:seed', ['--class' => 'GrantVectorSeeder']);
+        Artisan::call('db:seed', ['--class' => 'AssignNewVectorsToCentroidsSeeder']);
     }
 }
