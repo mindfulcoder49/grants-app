@@ -31,7 +31,7 @@
           
 
 
-          <!-- Match Score (if available in API data) -->
+          <!-- Match Score (if available in API data)
           <h3 v-if="grant.similarity" class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
             Match Score: {{ formatSimilarity(grant.similarity) }}
           </h3>
@@ -76,8 +76,8 @@
               <strong>Link to Grants.gov:</strong>
               <a :href="'https://www.grants.gov/search-results-detail/' + grant.id" target="_blank">View Details</a>
             </div>
-          </div>
-        </div>
+          </div> -->
+        </div> 
 
 
 
