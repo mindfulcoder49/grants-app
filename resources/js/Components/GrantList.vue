@@ -221,7 +221,7 @@ export default {
       if (!value) return '';
       const date = new Date(value);
       //dates liek Sept 4 1999
-      return date.toUTCDateString( { month: 'short', day: 'numeric', year: 'numeric' });
+      return date.toUTCString().slice(0, 16);
     },
     formatCurrency(value) {
       if (!value) return '$0';
