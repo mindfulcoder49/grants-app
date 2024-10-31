@@ -128,7 +128,9 @@
             <label for="funding-category">Category of Funding Activity:</label>
             <select id="funding-category" v-model="filters.categoryOfFundingActivity">
               <option value="">All Categories</option>
-              <option v-for="category in uniqueCategories" :key="category" :value="category">{{ category }}</option>
+              <option v-for="[code, label] in Object.entries(fundingActivityTypes)" :key="code" :value="code">
+                {{ label }}
+              </option>
             </select>
           </div>
 
@@ -153,7 +155,9 @@
             <label for="eligibility">Eligibility:</label>
             <select id="eligibility" v-model="filters.eligibility">
               <option value="">All Eligibility Types</option>
-              <option v-for="eligibility in uniqueEligibilities" :key="eligibility" :value="eligibility">{{ eligibility }}</option>
+              <option v-for="[code, label] in Object.entries(applicantTypes)" :key="code" :value="code">
+                {{ label }}
+              </option>
             </select>
           </div>
 
@@ -242,6 +246,51 @@ export default {
         opportunityCategory: '',
         grantorContact: ''
       },
+      applicantTypes: {
+          '99': 'Unrestricted',
+          '00': 'State governments',
+          '01': 'County governments',
+          '02': 'City or township governments',
+          '04': 'Special district governments',
+          '05': 'Independent school districts',
+          '06': 'Public and State controlled institutions of higher education',
+          '07': 'Native American tribal governments (Federally recognized)',
+          '08': 'Public housing authorities/Indian housing authorities',
+          '11': 'Native American tribal organizations (other than Federally recognized)',
+          '12': 'Nonprofits with 501(c)(3) status',
+          '13': 'Nonprofits without 501(c)(3) status',
+          '20': 'Private institutions of higher education',
+          '21': 'Individuals',
+          '22': 'For-profit organizations other than small businesses',
+          '23': 'Small businesses',
+          '25': 'Others'
+        },
+        fundingActivityTypes: {
+            'ACA': 'Affordable Care Act',
+            'AG': 'Agriculture',
+            'AR': 'Arts',
+            'BC': 'Business and Commerce',
+            'CD': 'Community Development',
+            'CP': 'Consumer Protection',
+            'DPR': 'Disaster Prevention and Relief',
+            'ED': 'Education',
+            'ELT': 'Employment, Labor and Training',
+            'EN': 'Energy',
+            'ENV': 'Environment',
+            'FN': 'Food and Nutrition',
+            'HL': 'Health',
+            'HO': 'Housing',
+            'HU': 'Humanities',
+            'ISS': 'Income Security and Social Services',
+            'IS': 'Information and Statistics',
+            'LJL': 'Law, Justice and Legal Services',
+            'NR': 'Natural Resources',
+            'RA': 'Recovery Act',
+            'RD': 'Regional Development',
+            'ST': 'Science and Technology',
+            'T': 'Transportation',
+            'O': 'Other',
+        },
     };
   },
   props: {
