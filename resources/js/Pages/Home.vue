@@ -127,7 +127,7 @@
     </nav>
 
     <!-- Page Content -->
-    <main class="py-6">
+    <main class="">
       <!--Absolutely positioned vertical navigation buttons-->
       <button @click="setPage('help-us-improve')" id="feedback_button" class="fixed bottom-4 right-4 bg-[#ccc] hover:bg-[#bbb] text-black font-bold py-2 px-4 rounded-md border border-black">
         Help Us Improve

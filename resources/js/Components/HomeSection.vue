@@ -48,10 +48,7 @@
     </div> -->
     
     <!-- div for spinner and loading message-->
-     <div v-if="loadingVectorSearch"  class="w-full flex justify-center">
-      <p>Loading, please wait... &nbsp</p>
-      <div class="loading-spinner"></div>
-    </div>
+
     
     
     <!-- Pass selectedGrants to AiAssistant -->
@@ -193,6 +190,10 @@
 
       </div>
       <div class="results-content">
+        <div v-if="loadingVectorSearch"  class="w-full flex justify-center">
+          <p>Results still loading... &nbsp</p>
+          <div class="loading-spinner"></div>
+        </div>
         <!-- Pass selectedGrants to GrantList -->
         <GrantList
           :grants="filteredGrants"
