@@ -54,7 +54,7 @@
         @click="addField" 
         class="mb-4 px-4 py-2 bg-black text-white rounded hover:bg-blue-600 transition"
       >
-        + Add Field
+        + Add Limiter
       </button>
     </div>
   </template>
