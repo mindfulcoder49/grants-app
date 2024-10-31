@@ -130,10 +130,15 @@
       </div>
 
       <div class="pagination">
+        <!-- button to go to the first page -->
         <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
+
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <!-- Make the display an editable input -->
+        <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
+        <span class="mx-4"> of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+        <!-- button to go to the last page -->
         <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
       </div>
     </div>
@@ -370,16 +375,16 @@ input[type="text"]::placeholder {
   padding: 10px 20px;
   font-size: .8rem; /* Responsive font size */
   color: #fff; /* White text */
-  background-color: #004aad; /* Blue button */
+  background-color: black; /* Blue button */
   border: none;
-  border-radius: 2px;
+  border-radius: 5px;
   cursor: pointer;
   min-width: 200px; /* Max width for larger screens */
   font-weight: 700;
 }
 
 .pagination button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: black;
 }
 
 /* Results list styling */

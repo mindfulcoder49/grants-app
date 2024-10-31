@@ -17,8 +17,9 @@
 
   <!-- Conditionally render content only after a search is performed -->
   <div v-if="searchPerformed">
-    <!-- Tabs for selecting which search result to display -->
+    <!-- Tabs for selecting which search result to display
     <div class="tabs">
+      <span v-if="loadingVectorSearch" class="loading-spinner"></span>
       <button 
         :class="{ active: activeTab === 'vectorSearch', inactive: activeTab !== 'vectorSearch'}" 
         class = "vector-search-button"
@@ -33,12 +34,12 @@
 
       
 
-      <span v-if="loadingVectorSearch" class="loading-spinner"></span>
+      
       
 
-    </div>
+    </div>  -->
     
-    <!-- Display GovGrants content when active -->
+    <!-- Display GovGrants content when active 
     <div v-show="activeTab === 'govgrants'">
       <GrantsGovSearch 
       ref="govGrantsSearch"
@@ -47,7 +48,7 @@
       @add-to-ai-conversation="addSelectedGrant"
       @remove-from-ai-conversation="removeSelectedGrant"
                />
-    </div>
+    </div> -->
     
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container">

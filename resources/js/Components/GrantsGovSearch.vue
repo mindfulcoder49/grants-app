@@ -1,5 +1,5 @@
 <template>
-    <div class="grants-gov-search-container">
+    <div class="grants-gov-search-container" ref="grantList" >
       
       <!-- Input field for the Grants.gov search 
       <input 
@@ -19,11 +19,18 @@
     <div v-if="paginatedResults.length" class="results-container">
       <h3 class="results-header">Relevant Grants</h3>
       <div class="results-content">
-        <div class="pagination">
-          <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-          <span>Page {{ currentPage }} of {{ totalPages }}</span>
-          <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
-        </div>
+      <div class="pagination">
+        <!-- button to go to the first page -->
+        <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
+
+        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <!-- Make the display an editable input -->
+        <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
+        <span class="mx-4"> of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages || paginatedResults.length === 0">Next</button>
+        <!-- button to go to the last page -->
+        <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
+      </div>
         <ul class="results-list">
           <li v-for="result in paginatedResults" :key="result.id" class="result-item">
             <h4>{{ result.title }}</h4>
@@ -41,6 +48,18 @@
             />
           </li>
         </ul>
+      <div class="pagination">
+        <!-- button to go to the first page -->
+        <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
+
+        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <!-- Make the display an editable input -->
+        <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
+        <span class="mx-4"> of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages || paginatedResults.length === 0">Next</button>
+        <!-- button to go to the last page -->
+        <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
+      </div>
       </div>
     </div>
   </div>
@@ -86,6 +105,10 @@ export default {
       this.searchTerm = this.getSearchTerm();
 
     },
+    advancedFilters() {
+      this.searchTerm = this.getSearchTerm();
+      this.searchGrantsGov();
+    }
   },
   methods: {
     getSearchTerm() {
@@ -129,12 +152,19 @@ export default {
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
+
+        this.scrollToTop();
       }
     },
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
+
+        this.scrollToTop();
       }
+    },
+    scrollToTop() {
+      this.$refs.grantList.scrollIntoView({ behavior: 'smooth' });
     },
   },
   async mounted() {
@@ -183,16 +213,16 @@ button {
   padding: 10px 20px;
   font-size: .8rem; /* Responsive font size */
   color: #fff; /* White text */
-  background-color: #004aad; /* Blue button */
+  background-color: black; /* Blue button */
   border: none;
-  border-radius: 2px;
+  border-radius: 5px;
   cursor: pointer;
   min-width: 200px; /* Max width for larger screens */
   font-weight: 700;
 }
 
 button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: black; /* Darker blue on hover */
 }
 
 /* Results list styling */
