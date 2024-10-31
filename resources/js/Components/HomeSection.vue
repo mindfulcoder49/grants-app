@@ -1,8 +1,5 @@
 <template>
-  <div v-if="searchPerformed">
-    <!-- Pass selectedGrants to AiAssistant -->
-    <ai-assistant :grants="selectedGrants" :govgrants="govgrants" @remove-grant="removeSelectedGrant" />
-  </div>
+
   
   <!-- Home Page Layout (content only, no header/footer) -->
   <h1 class="text-center text-3xl font-bold my-12">
@@ -56,6 +53,9 @@
       <div class="loading-spinner"></div>
     </div>
     
+    
+    <!-- Pass selectedGrants to AiAssistant -->
+    <ai-assistant :grants="selectedGrants" :govgrants="govgrants" @remove-grant="removeSelectedGrant" />
     
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container ">

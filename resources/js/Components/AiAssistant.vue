@@ -1,14 +1,14 @@
 <template>
-    <div class="ai-assistant border border-atechBlue-dark max-w-[98%] rounded-lg p-4 bg-black/25 relative z-2 mx-[1%] text-lg">
-        <div ref="chatHistory" class="p-2 bg-atechBlue chat-history max-h-[69vh] rounded-lg overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-[#2c3e50] scrollbar-track-black">
-            <div class="assistant-message text-black bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-4 mr-1 rounded-lg inline-block max-w-[95%] float-left mb-2 text-left">
+    <div class="ai-assistant" >
+        <div ref="chatHistory" class="chat-history">
+            <div class="assistant-message ">
                 <p>Hi! I'm the Grants AI Assistant, based on OpenAI's GPT-4o-mini model. I can help you with the grants in your search results. Click "Add to AI Chatbot" next to a grant to add it to our conversation.</p>
             </div>
             <div v-for="(message, index) in messages" :key="index" class="message-item mb-2 clear-both">
-                <p v-if="message.role === 'user'" class="user-message tex-black bg-gradient-to-r from-atechBlue/75 to-atechBlue-dark/50 p-4 ml-2 rounded-lg inline-block max-w-[95%] float-right mb-2 text-right">
+                <p v-if="message.role === 'user'" class="user-message">
                     {{ message.content }}
                 </p>
-                <div v-if="message.role === 'assistant'" class="assistant-message text-black bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-4 mr-1 rounded-lg inline-block max-w-[95%] float-left mb-2 text-left">
+                <div v-if="message.role === 'assistant'" class="assistant-message ">
                     <div v-html="renderMarkdown(message.content)"></div>
                 </div>
             </div>
@@ -22,7 +22,7 @@
             <div v-if="grants != null && grants.length > 0" class="grants-list">
                 <h4 class="text-black font-bold">Selected Grants:</h4>
                 <ul>
-                    <li v-for="(grant, index) in grants" :key="'grant-' + index" class="text-black flex items-center bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] p-2 rounded-lg mb-2">
+                    <li v-for="(grant, index) in grants" :key="'grant-' + index" class="grant-item">
                         {{ grant.opportunity_title }} {{ grant.opportunityTitle }}
                         <button @click="removeGrant(grant.id)" class="ml-2 text-red-500">X</button>
                     </li>
@@ -34,14 +34,14 @@
             <textarea
                 v-model="form.message"
                 placeholder="Which grants are attached to this conversation?"
-                class="w-full p-3 rounded-lg border-none bg-gradient-to-r from-atechBlue to-atechBlue-dark tex-black text-l"
+                class="message-input"
                 rows="2"
             ></textarea>
-            <div class="flex-col sm:flex-row sm:space-x-4">
-                <button type="submit" class="send-button cursor-pointer rounded-lg border border-white bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] text-black p-4 mt-4 w-full sm:w-3/5">
+            <div class="button-group">
+                <button type="submit" class="send-button ">
                     Send
                 </button>
-                <button @click="downloadConversation" class="send-button cursor-pointer rounded-lg border border-white bg-gradient-to-r from-atechBlue-light/85 to-[#dddddd] text-black p-4 mt-2 w-full sm:w-1/3 ">
+                <button @click="downloadConversation" class="download-button">
                     Download Chat
                 </button>
             </div>
@@ -167,6 +167,125 @@ const downloadConversation = () => {
 </script>
 
 <style scoped>
+.ai-assistant {
+    border: 10px solid #fff;
+    max-width: 98%;
+    padding: 1rem;
+    background-color: #f4f1eb;
+    position: relative;
+    z-index: 2;
+    margin: 0 1%;
+    font-size: 1.125rem;
+}
+
+.chat-history {
+    padding: 0.5rem;
+    max-height: 69vh;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: #2c3e50 black;
+}
+
+.assistant-message {
+    color: black;
+    background: white;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-right: 0.25rem;
+    display: inline-block;
+    max-width: 95%;
+    float: left;
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+.user-message {
+    color: black;
+    background: white;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-left: 0.5rem;
+    display: inline-block;
+    max-width: 95%;
+    float: right;
+    margin-bottom: 0.5rem;
+    text-align: right;
+}
+
+.loading-indicator {
+    color: black;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.grants-section {
+    margin-bottom: 1rem;
+}
+
+.grants-list {
+    margin-top: 0.5rem;
+}
+
+.grants-title {
+    color: black;
+    font-weight: bold;
+}
+
+.grant-item {
+    color: black;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 5px;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.remove-button {
+    margin-left: 0.5rem;
+    color: #ff0000;
+}
+
+.form {
+    font-size: 1.25rem;
+}
+
+.message-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 5px;
+    border: none;
+    background: white;
+    color: black;
+    font-size: 1rem;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.send-button {
+    cursor: pointer;
+    border: 1px solid white;
+    background: black;
+    border-radius: 5px;
+    color: white;
+    padding: 1rem;
+    width: 100%;
+}
+
+.download-button {
+    cursor: pointer;
+    border: 1px solid white;
+    background: black;
+    border-radius: 5px;
+    color: white;
+    padding: 1rem;
+    width: 100%;
+}
 .scrollbar-thin {
   scrollbar-width: thin;
 }
