@@ -39,9 +39,9 @@
           <h3 class="text-xl font-bold mb-2">
             {{ grant.opportunityTitle }} - Ceiling: {{ formatCurrency(grant.awardCeiling) }}
           </h3>
-          <p class="text-sm text-gray-700 mb-2">{{ grant.synopsis.synopsisDesc }}</p>
+          <p class="text-md text-gray-700 mb-2">{{ grant.synopsis.synopsisDesc }}</p>
 
-          <div class="grid md:grid-cols-2 gap-4 text-sm">
+          <div class="grid md:grid-cols-2 gap-4 text-md">
             <div>
               <strong>Opportunity ID:</strong> {{ grant.id }}<br>
               <strong>Opportunity Number:</strong> {{ grant.opportunityNumber }}<br>
@@ -88,8 +88,8 @@
           Match Score: {{ formatSimilarity(grant.similarity) }}
         </h3>
           <h3 class="text-xl font-bold mb-2">{{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
-          <p class="text-sm text-gray-700 mb-2">{{ grant.description }}</p>
-          <div class="grid md:grid-cols-2 gap-4 text-sm">
+          <p class="text-md text-gray-700 mb-2">{{ grant.description }}</p>
+          <div class="grid md:grid-cols-2 gap-4 text-md">
             <div>
               <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
               <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
@@ -439,15 +439,8 @@ input[type="text"]::placeholder {
 }
 
 a {
-    padding-left: 1.25rem; /* equivalent to px-5 */
-    padding-right: 1.25rem; /* equivalent to px-5 */
-    margin-top: 1rem; /* equivalent to mt-4 */
-    background: linear-gradient(to top, #B8CFD6, #B8CFD6); /* equivalent to bg-gradient-to-t from-atechGreen to-atechBlue-light */
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* equivalent to shadow-lg */
-    color: black; /* equivalent to text-black */
-    font-size: 1.125rem; /* equivalent to text-lg */
-    border-radius: 0.5rem; /* equivalent to rounded-lg */
-    text-decoration: none; /* Remove underline for links */
-    display: inline-block; /* Ensures padding and margin are respected */
+    padding-left: .5rem; /* equivalent to px-5 */
+    color: #08278d;
+    text-decoration: underline;
 }
 </style>
