@@ -50,6 +50,13 @@
                />
     </div> -->
     
+    <!-- div for spinner and loading message-->
+     <div v-if="loadingVectorSearch"  class="w-full flex justify-center">
+      <p>Loading, please wait... &nbsp</p>
+      <div class="loading-spinner"></div>
+    </div>
+    
+    
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container">
       <div v-if="grants != null" class="results-header">

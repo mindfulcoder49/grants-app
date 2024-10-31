@@ -37,6 +37,11 @@
             </option>
           </select>
         </div>
+        <!-- use a date input field for post_date and close_date -->
+        <div v-else-if="search.field === 'post_date' || search.field === 'close_date'" class="p-2 border
+        rounded w-full">
+          <input type="date" v-model="search.value" class="w-full" />
+        </div>
         
         <div v-else class="w-full p-2 border rounded">
           <input v-model="search.value" placeholder="Enter keyword" class="w-full" />
