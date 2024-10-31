@@ -3,17 +3,23 @@
   <div ref="grantList">
     <!-- Pagination controls -->
     <div v-if="paginatedGrants.length > 0">
-      <div class="pagination">
+      <div class="pagination flex w-full justify-between pb-5">
         <!-- button to go to the first page -->
+         <div class="button-group flex space-x-4" >
         <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
 
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+         </div>
         <!-- Make the display an editable input -->
+         <div class="button-group flex space-x-4 align-center" >
         <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
-        <span class="mx-4"> of {{ totalPages }}</span>
+        <span class="m-auto"> of {{ totalPages }}</span>
+          </div>
+          <div class="button-group flex space-x-4" >
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
         <!-- button to go to the last page -->
         <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
+          </div>
       </div>
       
       <div v-for="grant, index in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
@@ -129,17 +135,23 @@
           <a href="/login" @click="warnNavigation" class="text-blue-500 hover:underline">Login</a> to save grants.</p>
       </div>
 
-      <div class="pagination">
+      <div class="pagination flex w-full justify-between py-5">
         <!-- button to go to the first page -->
+         <div class="button-group flex space-x-4" >
         <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
 
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+         </div>
         <!-- Make the display an editable input -->
+         <div class="button-group flex space-x-4 align-center" >
         <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
-        <span class="mx-4"> of {{ totalPages }}</span>
+        <span class="m-auto"> of {{ totalPages }}</span>
+          </div>
+          <div class="button-group flex space-x-4" >
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
         <!-- button to go to the last page -->
         <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
+          </div>
       </div>
     </div>
 
@@ -330,12 +342,6 @@ export default {
   background-color: #fff; /* White background for contrast */
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
 
 .pagination button:disabled {
   background-color: #cccccc;
@@ -413,13 +419,6 @@ input[type="text"]::placeholder {
   margin: 5px 0;
   font-size: 1rem; /* Equivalent to 16px */
   color: #333; /* Dark gray text */
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
 }
 
 .pagination button {

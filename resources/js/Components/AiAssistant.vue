@@ -169,17 +169,14 @@ const downloadConversation = () => {
 <style scoped>
 .ai-assistant {
     border: 10px solid #fff;
-    max-width: 98%;
     padding: 1rem;
     background-color: #f4f1eb;
     position: relative;
     z-index: 2;
-    margin: 0 1%;
     font-size: 1.125rem;
 }
 
 .chat-history {
-    padding: 0.5rem;
     max-height: 69vh;
     overflow-y: auto;
     margin-bottom: 1rem;

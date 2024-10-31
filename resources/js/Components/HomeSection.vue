@@ -2,14 +2,31 @@
 
   
   <!-- Home Page Layout (content only, no header/footer) -->
-  <h1 class="text-center text-3xl font-bold my-12">
-    I am looking for grants
-  </h1>
-  
-  <SearchInput v-model="companyDescription" />
-  <SearchButton :companyDescription="companyDescription" @search="performSearch" :buttonText="buttonText" />
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-10 lg:gap-8 lg:gap-20">
+    <!-- First Item: Heading -->
+    <div class="col-span-1 flex-col justify-center items-center pt-20">
+      <h1 class="text-3xl font-bold p-[2vw]">
+        Looking for grants?
+      </h1>
+      <SearchInput v-model="companyDescription" />
+    </div>
 
-  <AdvancedSearch ref="advancedSearch" :initial-fields="advancedSearchFields" />
+    <!-- Second Item: Search Input -->
+    <div class="col-span-1 flex justify-center items-center ">
+      
+    </div>
+
+    <!-- Third Item: Advanced Search -->
+    <div class="col-span-1 flex justify-center items-center border border-white border-8 p-[2vw]">
+      <AdvancedSearch ref="advancedSearch" :initial-fields="advancedSearchFields" />
+    </div>
+
+    <!-- Fourth Item: Search Button -->
+    <div class="col-span-1 flex justify-center items-end border border-white border-8 p-[2vw]">
+      <SearchButton :companyDescription="companyDescription" @search="performSearch" :buttonText="buttonText" />
+    </div>
+  </div>
+
 
 
   <!-- Conditionally render content only after a search is performed -->
@@ -593,19 +610,18 @@ body {
 }
 
 h1 {
-  text-align: center;
+  text-align: justify;
   font-size: 2.5rem; /* Equivalent to 40px */
   font-weight: bold;
   color: #000; /* Black text */
-  margin-top: 20vh; /* Vertical center alignment */
 }
 
 /* Custom CSS for Results Page */
 .results-container {
   display: flex;
   flex-direction: column; /* Mobile-first column layout */
-  /* Padding only on sides and bottom */
-  padding: 5% 5% 0;
+  /* Padding only on top and bottom */
+  padding: 5% 0;
 }
 
 @media (min-width: 768px) {

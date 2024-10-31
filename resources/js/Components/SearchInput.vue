@@ -28,24 +28,33 @@ export default {
 
 <style scoped>
 textarea {
-  width: 80%;
-  max-width: 500px;
+  display: flex;
+  width: 100%;
   padding: 0.5rem;
-  margin: 0.5rem auto;
+  margin: 0.5rem 0;
   font-size: 1.5rem;
-  border-radius: 1rem;
+  border-radius: 10px;
   border: 1px solid #c000;
   text-align: center;
+  justify-content: center ;
   color: #111;
   display: block;
   resize: none; /* Disable manual resizing */
   overflow: hidden; /* Hide scrollbars */
   line-height: 1.5cap;
+  padding: 10px; /* Adjust as necessary */
+  line-height: 1.5; /* Adjust the line height */
+}
+
+textarea:focus {
+  outline: none; /* Remove default focus styling */
 }
 
 /* Placeholder styling */
 textarea::placeholder {
-  color: #76685b;
+  color: #50473e;
   font-style: italic;
+  padding-top: 1rem;
+  font-weight: 600;
 }
 </style>
