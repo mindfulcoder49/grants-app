@@ -21,8 +21,10 @@
         "@capacitor/android": "^6.1.2",
         "@capacitor/cli": "^6.1.2",
         "@capacitor/core": "^6.1.2",
+        "chart.js": "^4.4.4",
         "markdown-it": "^14.1.0",
         "markdown-it-link-attributes": "^4.0.1",
+        "vue-chartjs": "^5.3.1",
         "vue-gtag": "^2.0.1"
     }
 }

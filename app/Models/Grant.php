@@ -54,4 +54,17 @@ class Grant extends Model
         'expected_number_of_awards' => 'integer',
         'cost_sharing_requirement' => 'boolean',
     ];
+
+    //get search fields
+    public static function getSearchFields(): array
+    {
+        //get all fillable
+        $fillable = (new self())->getFillable();
+        //remove created_at and updated_at
+        $fillable = array_diff($fillable, ['created_at', 'updated_at']);
+        //sort alphabetically
+        sort($fillable);
+        return $fillable;
+        
+    }
 }

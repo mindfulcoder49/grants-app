@@ -4,15 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Grant;
+use App\Models\SavedGrant;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\VectorController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Centroid;
+use App\Http\Controllers\CentroidController;
+use App\Models\Vector;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GrantsController extends Controller
 {
     protected $vectorController;
+
 
     public function __construct()
     {
@@ -22,11 +29,20 @@ class GrantsController extends Controller
     /**
      * Main search method that checks for either text search or vector search.
      */
-    public function search(Request $request) 
+    public function search(Request $request)
     {
         // Validate the input
         $request->validate([
-            'description' => 'string|nullable',
+            'description'   => 'string|nullable',
+            'search_type'   => 'string|required',
+            'top_centroids' => 'integer|nullable',
+            'hamming_mode'  => 'string|nullable',
+            'testMode'    => 'boolean|nullable',
+            'topN'          => 'integer|nullable',
+            'centroid_async' => 'boolean|nullable',
+            'percentageToRefine' => 'numeric|nullable',
+            'open_only'     => 'boolean|nullable',
+            'advancedFields'    => 'array|nullable',
         ]);
 
         // Log the incoming search request
@@ -34,7 +50,6 @@ class GrantsController extends Controller
 
         // Get the search term
         $searchTerm = $request->input('description');
-        $results = [];
 
         // If the search term is empty when trimmed, default to "Artificial Intelligence"
         if (empty(trim($searchTerm))) {
@@ -45,62 +60,239 @@ class GrantsController extends Controller
         // Log the actual search term being used
         Log::info('Searching with term: ' . $searchTerm);
 
-        try {
-            // Perform vector search
-            $results = $this->vectorSearch($searchTerm);
-        } catch (\Exception $e) {
-            // Log the exception if vector search fails
-            Log::error('Vector search failed.', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Search failed.'], 500);
+        // Step 1: Embed the search term into a vector
+        $embedding = $this->embedText($searchTerm);
+
+        $normalizedVector = Vector::normalize($embedding);
+
+        $centroid_async = $request->input('centroid_async', false);
+        $searchType = $request->input('search_type');
+        $topN = $request->input('topN', 2000);
+        $top_centroids = ($searchType === 'centroid') ? $request->input('top_centroids', 5) : 5;
+        $useHamming = $request->input('hamming_mode', 'hybrid');
+        $single_centroid = $request->input('single_centroid', -1);
+        $percentageToRefine = $request->input('percentageToRefine', 1);
+
+        $open_only = $request->input('open_only', false);
+        $scopes = [];
+
+        if ($open_only) {
+            $scopes = [['scope' => 'open']];
+        } else {
+            $scopes = [['scope' => 'all']];
+        }
+        
+        if ($request->input('advancedFields')) {
+            //add the advanced fields to the scopes with a scope => keyword field along with the field/value fields from the request
+            foreach ($request->input('advancedFields') as $field) {
+
+                //compare to Grants::getSearchFields() to ensure the field is valid
+                if (!in_array($field['field'], Grant::getSearchFields())) {
+                    Log::error('Invalid search field.', ['field' => $field['field']]);
+                    return Inertia::render('Home', [
+                        'grants'     => [],
+                        'searchTerm' => $searchTerm,
+                        'error'      => 'Invalid search field: ' . $field['field']
+                    ]);
+                }
+
+                //truncate value to 255 characters
+                $field['value'] = substr($field['value'], 0, 255);
+                $scopes[] = ['scope' => 'keyword', 'field' => $field['field'], 'value' => $field['value']];
+            }
+        } 
+        
+        Log::info('Search scopes in GrantsController::search ', ['scopes' => $scopes]);
+
+        if (!$centroid_async) {
+
+            try {
+                $results = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scopes);
+            } catch (\Exception $e) {
+                // Log the exception if search fails
+                Log::error('Search failed.', ['error' => $e->getMessage()]);
+                return Inertia::render('Home', [
+                    'grants'     => [],
+                    'searchTerm' => $searchTerm,
+                    'error'      => $e->getMessage()
+                ]);
+            }
+
+            // Log the number of results found
+            Log::info('Search results found.', ['count' => $results->count()]);
+
+            //take topN results
+            $results = $results->take($topN);
+
+            if ($request->input('testMode')) {
+                // If test mode is enabled, return the results as JSON the same way the API would
+                return response()->json(['grants' => $results->values()->toArray()]);
+            }
+
+            // Pass the results to the Inertia page along with the search term
+            return Inertia::render('Home', [
+                'grants'     => $results->values()->toArray(),
+                'searchTerm' => $searchTerm
+            ]);
+        } else {
+
+            Log::info('Searching asynchronously with term: ' . $searchTerm);
+            //get the closest centroid array
+            $myCentroidController = new CentroidController();    
+
+            Log::info('Finding closest centroids');
+
+            $closestCentroids = $myCentroidController->findClosestCentroids($normalizedVector, $top_centroids);
+
+            Log::info('Found closest centroids', ['count' => count($closestCentroids)]);
+
+            return new StreamedResponse(function() use ($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes) {
+                $this->streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes);
+            });
+
+
+
         }
 
-        // Log the number of results found
-        Log::info('Search results found.', ['count' => $results->count()]);
+    }
 
-        // Pass the results to the Inertia page along with the search term
-        return Inertia::render('Home', [
-            'grants' => $results->values()->toArray(),
-            'searchTerm' => $searchTerm
-        ]);
+    private function streamSearchResults($closestCentroids, $embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $scopes) {
+        foreach ($closestCentroids as $centroid) {
+            $centroidID = $centroid['id'];
+            try {
+                $centroidGrants = $this->performSearch($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $centroidID, $scopes);
+                
+                foreach ($centroidGrants as $grant) {
+                    echo json_encode($grant) . "\n"; // Output each grant JSON object followed by a newline
+                    ob_flush();
+                    flush();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error in search.', ['error' => $e->getMessage()]);
+            }
+        }
+    }
+    
+    
+
+    /**
+     * Perform a search (vector or centroid) using the embedded search term.
+     */
+    public function performSearch($embedding, $searchType = 'vector', $topN = 2000, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scopes = [['scope' => 'all']])
+    {
+        try {
+
+
+            // Step 2: Retrieve similar vectors
+            $similarVectors = $this->retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming, $top_centroids, $percentageToRefine, $single_centroid, $scopes);
+
+            if (empty($similarVectors)) {
+                throw new \Exception("No similar vectors found.");
+            }
+
+            // Step 3: Extract vector IDs and similarities
+            $vectorIds = array_column($similarVectors, 'id');
+            $vectorSimilarityMap = array_combine(
+                array_column($similarVectors, 'id'),
+                array_column($similarVectors, 'similarity')
+            );
+
+            // Step 4: Fetch grants and assign similarities
+            $grants = $this->fetchGrantsByVectorIds($vectorIds, $vectorSimilarityMap);
+
+            return $grants;
+        } catch (\Exception $e) {
+            // Log the exception if anything goes wrong
+            Log::error('Error in search.', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
-     * Perform a vector-based search using the embedded search term and return grants with similarity scores.
+     * Embed the given text into a vector.
      */
-    public function vectorSearch($searchTerm)
+    private function embedText($text)
     {
-        try {
-            // Step 1: Embed the search term into a vector
-            Log::info('Embedding the search term into a vector.');
-            $embeddingResponse = $this->vectorController->embedText(new Request(['texts' => [$searchTerm]]));
-            $embedding = $embeddingResponse->getData()->embeddings[0];
-            Log::info('Embedding successful.');
+        // Embedding the search term into a vector
+        Log::info('Embedding text into a vector.');
+        $embeddingResponse = $this->vectorController->embedText(new Request(['texts' => [$text]]));
+        $embedding = $embeddingResponse->getData()->embeddings[0];
+        Log::info('Embedding successful.');
+        return $embedding;
+    }
 
-            // Step 2: Search for similar vectors using the embedded search term
+    /**
+     * Retrieve similar vectors based on the search type.
+     */
+    private function retrieveSimilarVectors($embedding, $searchType, $topN, $useHamming = 'hybrid', $top_centroids = 5, $percentageToRefine = 1, $single_centroid = -1, $scopes = [['scope' => 'all']])
+    {
+        if ($searchType === 'centroid') {
+            // Instantiate the CentroidController
+            $centroidController = new CentroidController();
+    
+            // Prepare the request data
+            $requestData = [
+                'vector'        => $embedding,
+                'top_centroids' => $top_centroids,
+                'topN'          => $topN,
+                'single_centroid' => $single_centroid,
+                'scopes'         => $scopes,
+            ];
+    
+            // Add percentageToRefine if using hybrid search
+            if ($useHamming === 'hybrid') {
+                $requestData['percentageToRefine'] = $percentageToRefine;
+            }
+    
+            // Create a new Request instance
+            $request = new Request($requestData);
+    
+            // Call the appropriate search method based on $useHamming
+            switch ($useHamming) {
+                case 'cosine':
+                    $similarVectorsResponse = $centroidController->searchByCosineSimilarity($request);
+                    break;
+                case 'hamming':
+                    $similarVectorsResponse = $centroidController->searchByHammingDistance($request);
+                    break;
+                case 'hybrid':
+                    $similarVectorsResponse = $centroidController->searchHybrid($request);
+                    break;
+                default:
+                    // Default to hybrid search if $useHamming is not recognized
+                    $similarVectorsResponse = $centroidController->searchHybrid($request);
+            }
+    
+            // Extract similar vectors from the response
+            $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
+    
+            Log::info('Found similar vectors using centroid search.', ['count' => count($similarVectors)]);
+            return $similarVectors;
+    
+        } else {
+            // Direct vector search
             Log::info('Searching for similar vectors.');
             $similarVectorsResponse = $this->vectorController->searchSimilarVectors(new Request([
-                'vector' => $embedding,
-                'topN' => 20
+                'vector'     => $embedding,
+                'topN'       => $topN,
+                'useHamming' => $useHamming,
             ]));
-            Log::info('Similar vector search successful.');
             $similarVectors = $similarVectorsResponse->getData()->similar_vectors;
             Log::info('Found similar vectors.', ['count' => count($similarVectors)]);
-        } catch (\Exception $e) {
-            // Log if embedding or vector search fails
-            Log::error('Error in vector search.', ['error' => $e->getMessage()]);
-            throw $e;
+            return $similarVectors;
         }
+    }
+    
 
-        // Step 3: Extract vector IDs and similarities
-        Log::info('Extracting vector IDs and similarities.');
-        $vectorIds = array_column($similarVectors, 'id');
-        $vectorSimilarityMap = array_combine(
-            array_column($similarVectors, 'id'),
-            array_column($similarVectors, 'similarity')
-        );
 
-        // Step 4: Fetch the grants related to similar vectors by matching on `opportunity_id`
-        Log::info('Fetching grants related to similar vectors.', ['count' => count($similarVectors)]);
+
+    /**
+     * Fetch grants by vector IDs and assign similarity scores.
+     */
+    private function fetchGrantsByVectorIds($vectorIds, $vectorSimilarityMap)
+    {
+        // Fetch the grants related to similar vectors by matching on `opportunity_id`
+        Log::info('Fetching grants related to similar vectors.', ['count' => count($vectorIds)]);
         $grants = Grant::join('grant_vector', 'grants.opportunity_id', '=', 'grant_vector.opportunity_id')
             ->whereIn('grant_vector.vector_id', $vectorIds)
             ->select('grants.*', 'grant_vector.vector_id')
@@ -108,26 +300,22 @@ class GrantsController extends Controller
 
         Log::info('Fetched grants.', ['count' => $grants->count()]);
 
-        // Step 5: Add similarity to each grant and sort by the original order of vector IDs
-        Log::info('Adding similarity scores to grants and sorting by vector order.');
+        // Add similarity to each grant
+        Log::info('Adding similarity scores to grants.');
         $grants = $grants->map(function ($grant) use ($vectorSimilarityMap) {
             $grant->similarity = $vectorSimilarityMap[$grant->vector_id] ?? 0;
             return $grant;
         });
 
-        // Maintain the order of vector IDs from searchSimilarVectors
-        $vectorIdOrder = array_flip($vectorIds); // Create an array where vector_id is the key and its position is the value
+        // Sort grants by similarity descending
+        $grants = $grants->sortByDesc('similarity');
 
-        // Sort grants by the order of vector IDs as returned by searchSimilarVectors
-        $grants = $grants->sort(function ($a, $b) use ($vectorIdOrder) {
-            return $vectorIdOrder[$a->vector_id] <=> $vectorIdOrder[$b->vector_id];
-        });
-
-        Log::info('Grants sorted by vector order.', ['count' => $grants->count()]);
-
+        Log::info('Grants sorted by similarity.', ['count' => $grants->count()]);
 
         return $grants;
     }
+
+    
 
     /**
      * Store the grant information for the logged-in user.
@@ -147,7 +335,7 @@ class GrantsController extends Controller
         }
 
         // Check if the email exists in the database
-        $existingGrant = Grant::where('email', $user->email)->first();
+        $existingGrant = SavedGrant::where('email', $user->email)->first();
 
         if ($existingGrant) {
             // If the user's grant info exists, update it
@@ -156,7 +344,7 @@ class GrantsController extends Controller
         } else {
             // If no record exists, create a new one
             Grant::create([
-                'email' => $user->email,
+                'email'      => $user->email,
                 'grant_info' => $request->input('grant'),
             ]);
         }
@@ -165,5 +353,10 @@ class GrantsController extends Controller
         Log::info('Grant information stored for user: ' . $user->email);
 
         return response()->json(['message' => 'Grant information saved successfully.']);
+    }
+
+    public function getSearchFields ( Request $request ) {
+        $fields = Grant::getSearchFields();
+        return response()->json($fields);
     }
 }

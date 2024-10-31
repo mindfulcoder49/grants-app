@@ -1,24 +1,34 @@
 <template>
   <!-- Grant List Component -->
-  <div>
+  <div ref="grantList">
     <!-- Pagination controls -->
     <div v-if="paginatedGrants.length > 0">
       <div class="pagination">
+        <!-- button to go to the first page -->
+        <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
+
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <!-- Make the display an editable input -->
+        <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
+        <span class="mx-4"> of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+        <!-- button to go to the last page -->
+        <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
       </div>
       
-      <div v-for="grant in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
+      <div v-for="grant, index in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
 
 
-
+        <div>
+          <h3 class="text-xl font-bold mb-2">#{{ index + (currentPage - 1) * pageSize + 1 }}</h3>
+        </div>
         <div v-if="grant.opportunityTitle" class="p-4 bg-white shadow rounded-lg">
           <!--
           <div class="bg-black text-white">
             <JsonTree :json="grant" />
-          </div>
-        -->
+          </div> -->
+
+          
 
 
           <!-- Match Score (if available in API data) -->
@@ -120,9 +130,11 @@
       </div>
 
       <div class="pagination">
+        <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
         <span>Page {{ currentPage }} of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
+        <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
       </div>
     </div>
 
@@ -186,12 +198,19 @@ export default {
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
+        //scroll to top of grant list
+        this.scrollToTop();
       }
     },
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-      }
+        //scroll to top of grant list
+        this.scrollToTop();
+      } 
+    },
+    scrollToTop() {
+      this.$refs.grantList.scrollIntoView({ behavior: 'smooth' });
     },
     formatDate(value) {
       if (!value) return '';

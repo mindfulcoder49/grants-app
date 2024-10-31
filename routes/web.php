@@ -14,7 +14,6 @@ use App\Http\Controllers\EmailController;
 
 Route::post('/feedback', [EmailController::class, 'store']);
 
-
 Route::middleware('auth')->group(function () {
     Route::post('/saved-grants', [SavedGrantController::class, 'store']);
     Route::get('/saved-grants', [SavedGrantController::class, 'index'])->name('saved-grants');
@@ -26,6 +25,14 @@ Route::get('/vector-test', function () {
     return Inertia::render('VectorTest');
 })->name('vector.test');
 
+Route::get('/search-test', function () {
+    return Inertia::render('SearchTest');
+})->name('search.test');
+
+Route::get('/centroid-test', function () {
+    return Inertia::render('SearchCentroidTest');
+})->name('centroid.test');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/', [GrantsController::class, 'search'])->name('search');
 Route::post('/search', [GrantsController::class, 'search'])->name('search');
@@ -35,6 +42,7 @@ Route::get('/update', [SiteInfoController::class, 'update'])->name('update');
 
 Route::get('/api/last-update', [SiteInfoController::class, 'getLastUpdate']);
 Route::post('/api/ai-chat', [AiAssistantController::class, 'handleRequest'])->name('ai.assistant');
+Route::get('/api/search-fields', [GrantsController::class, 'getSearchFields'])->name('search.fields');
 
 /*
 Route::get('/', function () {
