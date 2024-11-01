@@ -116,7 +116,7 @@
 button {
   display: block;
   margin: 3% 0;
-  padding: 15px 80px;
+  padding: 15px 0;
   font-size: 1rem;
   color: #fff;
   background-color: #004aad;

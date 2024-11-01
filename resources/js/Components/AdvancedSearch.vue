@@ -1,7 +1,7 @@
 <template>
     <div class="advanced-search flex-col items-center justify-center pt-6 w-full">
         <div class="search-interface" >
-      <h2 class="text-2xl font-semibold mb-4 text-justify">Advanced Search Limiters</h2>
+      <h2 class="text-2xl font-semibold mb-4">Advanced Search Limiters</h2>
       <p class="text-justify text-gray-600">Add fields to refine your vector search by filtering the grants based on 
         specific keywords or eligibility criteria.</p>
       </div>

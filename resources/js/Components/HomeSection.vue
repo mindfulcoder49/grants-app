@@ -610,10 +610,11 @@ body {
 }
 
 h1 {
-  text-align: justify;
+  text-align: left;
   font-size: 2.5rem; /* Equivalent to 40px */
   font-weight: bold;
   color: #000; /* Black text */
+  line-height: 2cap;
 }
 
 /* Custom CSS for Results Page */

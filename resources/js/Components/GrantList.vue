@@ -3,19 +3,19 @@
   <div ref="grantList">
     <!-- Pagination controls -->
     <div v-if="paginatedGrants.length > 0">
-      <div class="pagination flex w-full justify-between pb-5">
+      <div class="pagination flex w-full">
         <!-- button to go to the first page -->
-         <div class="button-group flex space-x-4" >
+         <div class="button-group flex" >
         <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
 
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
          </div>
         <!-- Make the display an editable input -->
-         <div class="button-group flex space-x-4 align-center" >
+         <div class="numbers-group flex" >
         <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
-        <span class="m-auto"> of {{ totalPages }}</span>
+        <span class="m-auto"> of </span><span class="m-auto">{{ totalPages }}</span>
           </div>
-          <div class="button-group flex space-x-4" >
+          <div class="button-group flex" >
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
         <!-- button to go to the last page -->
         <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
@@ -137,17 +137,17 @@
 
       <div class="pagination flex w-full justify-between py-5">
         <!-- button to go to the first page -->
-         <div class="button-group flex space-x-4" >
+         <div class="button-group flex" >
         <button @click="currentPage = 1" :disabled="currentPage === 1">First</button>
 
         <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
          </div>
         <!-- Make the display an editable input -->
-         <div class="button-group flex space-x-4 align-center" >
+         <div class="numbers-group flex" >
         <input type="number" v-model="currentPage" min="1" max="totalPages" class="text-center" style="width: 80px;">
         <span class="m-auto"> of {{ totalPages }}</span>
           </div>
-          <div class="button-group flex space-x-4" >
+          <div class="button-group flex" >
         <button @click="nextPage" :disabled="currentPage === totalPages || grants.length === 0">Next</button>
         <!-- button to go to the last page -->
         <button @click="currentPage = totalPages" :disabled="currentPage === totalPages">Last</button>
@@ -353,39 +353,35 @@ export default {
   background-color: #f4f1eb; /* Light beige background */
 }
 
-/* Search input styling */
-input[type="text"] {
-  display: block;
-  padding: 0.5rem;
-  margin: auto;
-  font-size: 1.5rem;
-  border-radius: 1rem;
-  width: 80%;
-  max-width: 500px;
-  border: 1px solid #c000;
+.pagination input[type="number"] {
+  width: 3rem;
+  height: 1cap;
   text-align: center;
-  /* change the color of the placeholder text */
-  color: #111;
+  justify-content: center;
 }
 
-/* change the color of the placeholder text */
-input[type="text"]::placeholder {
-    color: #76685b;
-    font-style: italic;
+.pagination div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: auto;
+  margin-left: auto;
+  
 }
 
 /* Search button styling */
 .pagination button {
   display: block;
-  margin: 3% auto;
-  padding: 10px 20px;
+  margin: 3% 3%;
+  padding: 5px;
   font-size: .8rem; /* Responsive font size */
   color: #fff; /* White text */
   background-color: black; /* Blue button */
   border: none;
   border-radius: 5px;
-  cursor: pointer;
-  min-width: 200px; /* Max width for larger screens */
+  cursor: pointer; 
+  width: 10vw;
+  height: 15vh;  /* Max width for larger screens */
   font-weight: 700;
 }
 
@@ -435,11 +431,20 @@ input[type="text"]::placeholder {
 
 .pagination span {
   font-size: 1.1rem;
+  font-weight: bold;
+  width: 3rem;
 }
 
 a {
     padding-left: .5rem; /* equivalent to px-5 */
     color: #08278d;
     text-decoration: underline;
+}
+
+/* make the pagination divs flex col on small screens */
+@media (max-width: 640px) {
+  .pagination .numbers-group {
+    flex-direction: column;
+  }
 }
 </style>
