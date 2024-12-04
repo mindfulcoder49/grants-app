@@ -396,12 +396,14 @@ export default {
   justify-content: center;
 }
 
+.pagination {
+  display: flex;
+  justify-content: space-between
+}
+
 .pagination div {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: auto;
-  margin-left: auto;
   
 }
 
@@ -415,8 +417,6 @@ export default {
   border: 2px solid black; /* Blue border */
   border-radius: 5px;
   cursor: pointer; 
-  width: 10vw;
-  height: 10vh;  /* Max width for larger screens */
   font-weight: 700;
 }
 
@@ -451,10 +451,6 @@ export default {
   color: #333; /* Dark gray text */
 }
 
-.pagination button {
-  min-width: 50px;
-  cursor: pointer;
-}
 
 .pagination button:disabled {
   background-color: #cccccc;
@@ -477,6 +473,21 @@ a {
 @media (max-width: 640px) {
   .pagination .numbers-group {
     flex-direction: column;
+  }
+}
+
+/* set pagination button width and height based on screen size */
+@media (min-width: 640px) {
+  .pagination button {
+    width: 100px;
+    height: 50px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pagination button {
+    width: 75px;
+    height: 100px;
   }
 }
 </style>

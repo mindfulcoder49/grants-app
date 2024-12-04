@@ -61,13 +61,13 @@
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container ">
       <div v-if="grants != null" class="results-header">
-        <div class="pb-2 mb-[60px]">
-          <h3 class="text-2xl font-bold ">Relevant Grants</h3>
+        <div class="pb-2 mb-8">
+          <h3 class="text-5xl font-bold ">Relevant Grants</h3>
         </div>
 
         <!-- Sidebar -->
          <! -- Filter toggle button -->
-        <div class="flex justify-center">
+        <div class="flex justify-start">
           <button @click="showFilters = !showFilters" class="filter-toggle-button border-2 border-black rounded-md p-2">
             {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
           </button>

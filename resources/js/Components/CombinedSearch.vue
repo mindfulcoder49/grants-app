@@ -15,7 +15,7 @@
       <div class="advanced-search flex-col items-center pt-6 pr-10 w-full">
         <div class="search-interface">
           <h2 class="text-2xl font-semibold mb-4">Advanced Search Limiters</h2>
-          <p class="text-justify text-gray-600">
+          <p class="text-justify text-gray-600">    
             Add fields to filter the grants based on specific keywords or
             eligibility criteria.
           </p>

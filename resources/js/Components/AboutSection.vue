@@ -3,10 +3,6 @@
      <div class="about-container">
         <div class="about-header">About</div>
     <div class="about-section">
-      <p><strong>This innovative mini-project</strong> that aims to bridge the gap between Massachusetts-based teams with potential grant opportunities they may not be aware of. The grant funding landscape presents a paradoxical blend of transparency and opacity. While information regarding grants is readily accessible and publicly disseminated, it is often challenging to identify grant opportunities. The allocation of grants frequently favors researchers who possess insider knowledge, creating an uneven playing field.
-        </p><p>
-          <strong>Recognizing the challenges</strong> in navigating the vast landscape of grant resources, the presents a minimum viable product (MVP) in the form of a vector search engine based on grants.gov. This search engine is designed to provide more relevant and tailored results, enabling users to discover suitable grant opportunities with greater ease and efficiency. Their project holds significant promise in empowering organizations and teams to access critical funding and support for their initiatives.
-</p>
       <h2>People</h2>
       <ul>
         <h3 class="text-lg font-semibold my-2">
@@ -20,8 +16,11 @@
           </svg>
 </a>
         </li>
+        <!--
         <h3 class="text-lg font-semibold my-2">Contributors</h3>
+        
         <li v-for="contributor in contributors">{{ contributor.name }}</li>
+      -->
       </ul>
       <h2>Technology</h2>
       <ul><li v-for="technology in technologies">{{ technology.name }}</li>
@@ -49,7 +48,7 @@ Walter Rivera
     name: 'AboutSection',
     data() {
       return {
-        people: [{ name: 'Salil Darji', linkedInURL: 'https://www.linkedin.com/in/mindfulcoder49/' }, { name: 'Alex Alcivar', linkedInURL: 'https://www.linkedin.com/in/saldarji/' }],
+        people: [{ name: 'Alex Alcivar', linkedInURL: 'https://www.linkedin.com/in/mindfulcoder49/' }, { name: 'Salil Darji', linkedInURL: 'https://www.linkedin.com/in/saldarji/' }],
         contributors: [{ name: 'Catherine Havasi' }, { name: 'John J. Stamatopolous' }, { name: 'Julie Chavez' }, { name: 'Pam Boiros' }, { name: 'Ram Katamaraja' }, { name: 'Sharna Sattiraju' }, { name: 'Thomas Schlapp' }, { name: 'Walter Rivera' }],
         technologies: [{ name: 'GPT-4o-mini' }, { name: 'OpenAI small embeddings'},  { name: 'Vue.js' }, { name: 'Inertia' }, { name: 'Laravel Breeze' },],
       };
@@ -57,3 +56,71 @@ Walter Rivera
   };
   </script>
   
+  <style scoped>
+
+  /* Custom CSS for About Page */
+.about-container {
+  display: flex;
+  flex-direction: column; /* Mobile-first column layout */
+  padding: 5%;
+}
+
+.about-header {
+  font-size: 3rem; /* Equivalent to 24px */
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 1.25rem; /* Spacing for mobile */
+}
+
+@media (min-width: 768px) {
+  .about-container {
+    flex-direction: row; /* Row layout for desktop */
+    justify-content: space-between;
+  }
+  .about-section {
+    width: 80%;
+  }
+}
+
+.about-section {
+  width: 100%;
+  margin-bottom: 1.25rem; /* Spacing for mobile */
+}
+
+@media (min-width: 768px) {
+  .about-section {
+    width: 75%;
+    margin-bottom: 0; /* Remove spacing for desktop */
+  }
+}
+
+.about-section h2 {
+  font-size: 1.5rem; /* Equivalent to 24px */
+  font-weight: bold;
+  margin-bottom: 1rem; /* Consistent spacing */
+}
+
+.about-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.about-section li {
+  font-size: 1.125rem; /* Equivalent to 18px */
+  color: #333;
+  margin-bottom: 0.5rem; /* Consistent spacing */
+}
+
+.about-section p {
+  font-size: 1rem; /* Equivalent to 16px */
+  color: #333;
+  margin-bottom: 0.75rem; /* Spacing for consistency */
+}
+
+a, p, div {
+  word-wrap: break-word; /* For older browsers */
+  word-break: break-word; /* Break long words/links */
+  overflow-wrap: break-word; /* Modern solution */
+}
+
+</style>
