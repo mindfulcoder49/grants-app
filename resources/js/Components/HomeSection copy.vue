@@ -1,18 +1,28 @@
 <template>
 
   
-  <!-- New Template -->
-<div class="flex flex-col items-center">
-  <!-- First Item: Heading -->
-  <div class="flex-col justify-center items-center pt-20 w-full">
-    <h1 class="text-2xl sm:text-6xl font-bold p-[2vw] text-center">
-      Advanced Grant Search Engine
-    </h1>
-  </div>
+  <!-- Home Page Layout (content only, no header/footer) -->
+  <div class="flex flex-col items-center">
+    <!-- First Item: Heading -->
+    <div class="flex-col justify-center items-center pt-20 w-full">
+      <h1 class="text-6xl font-bold p-[2vw] text-center">
+        Advanced Grant Search Engine
+      </h1>
+      <SearchInput v-model="companyDescription" />
+    </div>
 
-  <!-- Combined Search Component -->
-  <CombinedSearch @search="performSearch" :buttonText="buttonText" />
-</div>
+
+    <div class="flex flex-wrap justify-center items-center ">
+    <!-- Third Item: Advanced Search -->
+      <div class=" w-[30%] align-top">
+        <AdvancedSearch ref="advancedSearch" :initial-fields="advancedSearchFields" />
+      </div>
+
+
+      <SearchButton :companyDescription="companyDescription" @search="performSearch" :buttonText="buttonText" />
+     
+    </div>
+  </div>
 
 
 
@@ -61,18 +71,12 @@
     <!-- Display GrantList content when active -->
     <div v-show="activeTab === 'vectorSearch'" class="results-container ">
       <div v-if="grants != null" class="results-header">
-        <div class="pb-2 mb-[60px]">
+        <div class="border-b border-gray-300 pb-2 mb-[60px]">
           <h3 class="text-2xl font-bold ">Relevant Grants</h3>
         </div>
 
         <!-- Sidebar -->
-         <! -- Filter toggle button -->
-        <div class="flex justify-center">
-          <button @click="showFilters = !showFilters" class="filter-toggle-button border-2 border-black rounded-md p-2">
-            {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-          </button>
-        </div>
-        <div class="sidebar rounded-md" v-show="showFilters">
+        <div class="sidebar rounded-md">
           <h2 class="sidebar-title">Filters</h2>
 
           <!-- Any Field Filter -->
@@ -217,18 +221,19 @@
   </div>
 </template>
 <script>
-
+import SearchInput from '@/Components/SearchInput.vue';
+import SearchButton from '@/Components/SearchButton.vue';
 import AiAssistant from '@/Components/AiAssistant.vue';
 import GrantList from '@/Components/GrantList.vue';
 import GrantsGovSearch from '@/Components/GrantsGovSearch.vue';
-
-import CombinedSearch from '@/Components/CombinedSearch.vue';
+import AdvancedSearch from '@/Components/AdvancedSearch.vue';
 
 export default {
   name: 'HomeSection',
-  components: { AiAssistant, GrantList, GrantsGovSearch, CombinedSearch },
+  components: { SearchInput, SearchButton, AiAssistant, GrantList, GrantsGovSearch, AdvancedSearch },
   data() {
     return {
+      companyDescription: this.searchTerm || '',
       searchPerformed: false,
       govgrants: [],  // Store all the loaded government grant data here
       selectedGrants: [],  // Store selected grants here
@@ -236,7 +241,7 @@ export default {
       activeTab: 'vectorSearch', // Default to GovGrants tab being active
       loadingVectorSearch: true, // Track if the vector search is loading
       grants: [],
-      showFilters: false,
+      advancedSearchFields: [],
       filters: {
         anyField: '',
         opportunityTitle: '',
@@ -400,15 +405,19 @@ export default {
     this.loadingVectorSearch = true;
     this.grants = [];
 
-    // Proceed with the searchPayload directly
+
+    const advancedFields = this.$refs.advancedSearch.getFields();
+
+    if (advancedFields.length > 0) {
+      searchPayload.advancedFields = advancedFields;
+    }
+
     try {
       const response = await fetch('/', {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document
-            .querySelector('meta[name="csrf-token"]')
-            .getAttribute('content'),
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 
         },
         body: JSON.stringify(searchPayload),
       });
@@ -537,6 +546,7 @@ body {
 .sidebar {
   padding: 20px;
   border-radius: 5px;
+  background-color: #fff;
   width: 100%
 }
 

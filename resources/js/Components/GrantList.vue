@@ -25,10 +25,8 @@
       <div v-for="grant, index in paginatedGrants" :key="grant.id" class="grant-item border-b border-gray-300 pb-4 mb-4">
 
 
-        <div>
-          <h3 class="text-xl font-bold mb-2">#{{ index + (currentPage - 1) * pageSize + 1 }}</h3>
-        </div>
-        <div v-if="grant.opportunityTitle" class="p-4 bg-white shadow rounded-lg">
+
+        <div v-if="grant.opportunityTitle" class="p-4 shadow rounded-lg">
           <!--
           <div class="bg-black text-white">
             <JsonTree :json="grant" />
@@ -90,43 +88,65 @@
 
 
         <div v-else-if="grant.opportunity_title"> <!-- Native Grant -->
-          <h3 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-green-700 drop-shadow-md">
-          Match Score: {{ formatSimilarity(grant.similarity) }}
-        </h3>
-          <h3 class="text-xl font-bold mb-2">{{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
-          <p class="text-md text-gray-700 mb-2">{{ grant.description }}</p>
-          <div class="grid md:grid-cols-2 gap-4 text-md">
-            <div>
-              <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
-              <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
-              <strong>Post Date:</strong> {{ formatDate(grant.post_date) }}<br>
-              <strong>Close Date:</strong> {{ formatDate(grant.close_date) }}<br>
-              <strong>Agency Name:</strong> {{ grant.agency_name }}<br>
-              <strong>CFDA Number:</strong> {{ grant.cfda_number }}<br>
-              <strong>Category of Funding Activity:</strong> {{ getFundingActivity(grant.category_of_funding_activity) }}<br>
-              <strong>Cost Sharing Requirement:</strong> {{ grant.cost_sharing_requirement ? 'Yes' : 'No' }}<br>
-              <strong>Version:</strong> {{ grant.version }}
-            </div>
-            <div>
+          <div class="grid grid-cols-[100px,1fr]">
+            <div class="max-w-xs">
+            <h3 class="text-xl font-semibold">
+              {{ formatSimilarity(grant.similarity) }}
+            </h3>
+            <h3 class="text-m text-gray-400 my-2">
+              Result {{ index + (currentPage - 1) * pageSize + 1 }}
+            </h3>
+          </div>
+        <div>
+          <h3 class="text-xl font-bold mb-2"> {{ grant.opportunity_title }} - Ceiling: {{ formatCurrency(grant.award_ceiling) }}</h3>
+          <p class="text-md text-gray-700 mb-2" v-if="!isExpanded(grant.id)">
+            {{ grant.description.length > 300 ? grant.description.slice(0, 300) + "..." : grant.description }}
+          </p>
+
+
+          <div v-if="isExpanded(grant.id)">
+            <p class="text-md text-gray-700 mb-2">
+                {{ grant.description }}
+              </p>
               <strong>Eligibility:</strong> {{ getEligibilityDescription(grant.eligible_applicants) }}<br>
               <strong>Additional Eligibility Information:</strong> {{ stripHTML(grant.additional_information_on_eligibility) }}<br>
-              <strong>Funding Instrument:</strong> {{ getFundingInstrument(grant.funding_instrument_type) }}<br>
-              <strong>Category:</strong> {{ getOpportunityCategory(grant.opportunity_category) }}<br>
-              <strong>Contact:</strong> {{ grant.grantor_contact_email }}<br>
-              <strong>Website:</strong> 
-              <a :href="grant.additional_information_url" target="_blank" class="text-blue-500 hover:underline">
-                {{ grant.additional_information_url }}
-              </a><br>
-              <strong>Link to Grants.gov: </strong>
-              <a :href="'https://www.grants.gov/search-results-detail/' + grant.opportunity_id" target="_blank">View Details</a>
+            <div class="grid md:grid-cols-2 gap-4 text-md" >
+
+              <div>
+                <strong>Opportunity ID:</strong> {{ grant.opportunity_id }}<br>
+                <strong>Opportunity Number:</strong> {{ grant.opportunity_number }}<br>
+                <strong>Post Date:</strong> {{ formatDate(grant.post_date) }}<br>
+                <strong>Close Date:</strong> {{ formatDate(grant.close_date) }}<br>
+                <strong>Agency Name:</strong> {{ grant.agency_name }}<br>
+                <strong>CFDA Number:</strong> {{ grant.cfda_number }}<br>
+                <strong>Category of Funding Activity:</strong> {{ getFundingActivity(grant.category_of_funding_activity) }}<br>
+                <strong>Cost Sharing Requirement:</strong> {{ grant.cost_sharing_requirement ? 'Yes' : 'No' }}<br>
+                <strong>Version:</strong> {{ grant.version }}
+              </div>
+              <div>
+                <strong>Funding Instrument:</strong> {{ getFundingInstrument(grant.funding_instrument_type) }}<br>
+                <strong>Category:</strong> {{ getOpportunityCategory(grant.opportunity_category) }}<br>
+                <strong>Contact:</strong> {{ grant.grantor_contact_email }}<br>
+                <strong>Website:</strong> 
+                <a :href="grant.additional_information_url" target="_blank" class="text-blue-500 hover:underline">
+                  {{ grant.additional_information_url }}
+                </a><br>
+                <strong>Link to Grants.gov: </strong>
+                <a :href="'https://www.grants.gov/search-results-detail/' + grant.opportunity_id" target="_blank">View Details</a>
+              </div>
             </div>
+            <div class="w-full">
+
           </div>
         </div>
-
+ 
+        <button @click="toggleExpand(grant.id)" class="toggle-button border-2 border-black p-2 rounded-lg cursor-pointer mr-10">
+              {{ isExpanded(grant.id) ? 'Hide Details' : 'More Info' }}
+            </button>
         <!-- Add to AI Conversation Button -->
         <button
           @click="toggleGrant(grant)"
-          class="mt-4 bg-black text-white p-2 rounded-lg cursor-pointer"
+          class="mt-4 border-black text-black border-2 p-2 rounded-lg cursor-pointer"
         >
           {{ isAdded(grant.id) ? 'Remove from AI Chatbot' : 'Add to AI Chatbot' }}
         </button>
@@ -134,6 +154,9 @@
         <p class="m-4">If you are logged in, clicking the "Add to AI Chatbot" button will also add this grant to your saved grants. 
           <a href="/login" @click="warnNavigation" class="text-blue-500 hover:underline">Login</a> to save grants.</p>
       </div>
+    </div>
+  </div>
+</div>
 
       <div class="pagination flex w-full justify-between py-5">
         <!-- button to go to the first page -->
@@ -185,6 +208,7 @@ export default {
     return {
       currentPage: 1,
       pageSize: 5, // Number of grants per page
+      expandedGrants: [],
     };
   },
   computed: {
@@ -200,6 +224,19 @@ export default {
     },
   },
   methods: {
+    toggleExpand(grantId) {
+      const index = this.expandedGrants.indexOf(grantId);
+      if (index > -1) {
+        // Grant is already expanded; collapse it
+        this.expandedGrants.splice(index, 1);
+      } else {
+        // Grant is collapsed; expand it
+        this.expandedGrants.push(grantId);
+      }
+    },
+    isExpanded(grantId) {
+      return this.expandedGrants.includes(grantId);
+    },
     toggleGrant(grant) {
       if (this.isAdded(grant.id)) {
         // If already added, remove the grant
@@ -339,7 +376,6 @@ export default {
   padding: 2%;
   border-bottom: 1px solid #ddd;
   border-radius: 5px;
-  background-color: #fff; /* White background for contrast */
 }
 
 
@@ -374,19 +410,17 @@ export default {
   display: block;
   margin: 3% 3%;
   padding: 5px;
-  font-size: .8rem; /* Responsive font size */
-  color: #fff; /* White text */
-  background-color: black; /* Blue button */
-  border: none;
+  font-size: 1rem; /* Responsive font size */
+  color: black; /* White text */
+  border: 2px solid black; /* Blue border */
   border-radius: 5px;
   cursor: pointer; 
   width: 10vw;
-  height: 15vh;  /* Max width for larger screens */
+  height: 10vh;  /* Max width for larger screens */
   font-weight: 700;
 }
 
 .pagination button:hover {
-  background-color: black;
 }
 
 /* Results list styling */
@@ -419,8 +453,6 @@ export default {
 
 .pagination button {
   min-width: 50px;
-  color: white;
-  border: none;
   cursor: pointer;
 }
 

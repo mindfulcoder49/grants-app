@@ -1,5 +1,8 @@
 <template>
-    <div class="ai-assistant" >
+    <!-- Show Assistant toggle -->
+<div id="assistantContainer">
+
+    <div class="ai-assistant" v-show="showAssistant">
         <div ref="chatHistory" class="chat-history">
             <div class="assistant-message ">
                 <p>Hi! I'm the Grants AI Assistant, based on OpenAI's GPT-4o-mini model. I can help you with the grants in your search results. Click "Add to AI Chatbot" next to a grant to add it to our conversation.</p>
@@ -47,6 +50,12 @@
             </div>
         </form>
     </div>
+    <div class="flex items-center ">
+        <button @click="showAssistant = !showAssistant" class="border-2  font-bold py-2 px-4 rounded">
+            {{ showAssistant ? 'Hide' : 'Show' }} Assistant
+        </button>
+    </div>
+</div>
 </template>
 
 <script setup>
@@ -81,6 +90,8 @@ const chatHistory = ref(null);
 
 // Props for the grants and govgrants
 const props = defineProps(['grants', 'govgrants']);
+
+const showAssistant = ref(true);
 
 console.log('Grants:', props.grants);
 // Emit event when a grant is removed
@@ -167,21 +178,31 @@ const downloadConversation = () => {
 </script>
 
 <style scoped>
+
+#assistantContainer {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 1;
+    border: 2px solid black;
+    border-radius: 5px;
+    background-color: #f4f1eb;
+}
+
 .ai-assistant {
-    border: 10px solid #fff;
     padding: 1rem;
     background-color: #f4f1eb;
     position: relative;
     z-index: 2;
     font-size: 1.125rem;
+    max-width: 500px;
 }
 
 .chat-history {
     max-height: 69vh;
     overflow-y: auto;
     margin-bottom: 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: #2c3e50 black;
+    scrollbar-color: #2c3e50 white;
 }
 
 .assistant-message {
@@ -264,22 +285,12 @@ const downloadConversation = () => {
     gap: 0.5rem;
 }
 
-.send-button {
-    cursor: pointer;
-    border: 1px solid white;
-    background: black;
-    border-radius: 5px;
-    color: white;
-    padding: 1rem;
-    width: 100%;
-}
 
-.download-button {
+.download-button, .send-button {
     cursor: pointer;
-    border: 1px solid white;
-    background: black;
+    border: 2px solid black;
     border-radius: 5px;
-    color: white;
+    color: black;
     padding: 1rem;
     width: 100%;
 }
@@ -307,5 +318,9 @@ const downloadConversation = () => {
 
 .send-button {
     min-width: 100px;
+}
+
+button {
+    background-color: #f4f1eb;
 }
 </style>

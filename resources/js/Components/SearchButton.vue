@@ -26,23 +26,6 @@
         </div>
         -->
 
-        <!-- Open Only checkbox -->
-        <div class="flex flex-col items-center search-interface">
-    <!-- Slider Toggle for Open Only or All Grants -->
-    <div class="slider-container w-full flex items-center justify-center space-x-4">
-      <label class="slider">
-        <input type="checkbox" v-model="open_only" />
-        <span class="slider-round">
-          <span class="slider-text" v-if="open_only">Open Only<span class="slider-text-extra">: Searching grants accepting applications</span></span>
-          <span class="slider-text" v-else>All Grants<span class="slider-text-extra">: including closed opportunities</span></span>
-        </span>
-      </label>
-    </div>
-
-        <div class="flex text-md font-bold text-blue-900 text-justify">
-              Historical grant search is limited to the past two years. If you need more, let us know with the Help Us Improve button
-        </div>
-
         <!-- Hamming mode section, three radio buttons, for hamming_mode, cosine, hamming, and hybrid
         <div class="flex items-center space-x-4" >
           <label for="hamming_mode" class="font-medium">Search Mode: (Distance Comparison)</label>
@@ -65,53 +48,78 @@
         </div>
         -->
 
-        
-        <button @click="searchGrants">{{ buttonText }}</button>
+        <div class="w-[30%]"> 
+        <div class="switch-container">
+            <!-- Toggle Switch on the left -->
+            <label class="switch">
+              <input type="checkbox" v-model="include_all" />
+              <span class="slider round"></span>
+            </label>
 
-      </div>
+            <!-- Text on the right -->
+            <div class="toggle-text">
+              <span class="main-text">{{ include_all ? 'All Grants' : 'Open Only'  }}</span>
+              <span class="slider-text-extra">
+                {{ include_all ? ': including closed opportunities' : ': Searching grants accepting applications' }}
+              </span>
+            </div>
+          </div>
+
+  <!-- Historical grant search notice -->
+  <div class="flex text-md text-justify">
+    Historical grant search is limited to the past two years. If you need more, let us know with the Help Us Improve button
+  </div>
+</div>
+  <!-- Search Button -->
+   <div class="w-full flex flex-col items-center">
+  <button @click="searchGrants">{{ buttonText }}</button>
+  </div>
+</template>
 
 
-  </template>
+
   
-  <script>
-  export default {
-    name: 'SearchButton',
-    emits: ['search'], // Emit search event to parent
-    props: {
-      companyDescription: String, // Accept the description as a prop from parent
-      buttonText: {
-        type: String,
-        default: 'SEARCH FOR GRANTS', // Default button text
-      },
+<script>
+export default {
+  name: 'SearchButton',
+  emits: ['search'], // Emit search event to parent
+  props: {
+    companyDescription: String, // Accept the description as a prop from parent
+    buttonText: {
+      type: String,
+      default: 'SEARCH GRANTS.GOV', // Default button text
     },
-    data() {
-      return {
-        search_type: 'centroid', // Default search type
-        top_centroids: 200, // Default top centroids
-        hamming_mode: 'cosine', // Default hamming mode
-        centroid_async: true, // Default centroid async
-        open_only: true, // Default open only
+  },
+  data() {
+    return {
+      search_type: 'centroid', // Default search type
+      top_centroids: 200, // Default top centroids
+      hamming_mode: 'cosine', // Default hamming mode
+      centroid_async: true, // Default centroid async
+      open_only: true, // Default open only
+      include_all: false, // Default include all
+    };
+  },
+  methods: {
+    searchGrants() {
+      const searchPayload = {
+        description: this.companyDescription,
+        search_type: this.search_type,
+        top_centroids: this.top_centroids,
+        hamming_mode: this.hamming_mode,
+        centroid_async: this.centroid_async,
+        open_only: !this.include_all,
       };
-    },
-    methods: {
-      searchGrants() {
-        const searchPayload = {
-          description: this.companyDescription,
-          search_type: this.search_type,
-          top_centroids: this.top_centroids,
-          hamming_mode: this.hamming_mode,
-          centroid_async: this.centroid_async,
-          open_only: this.open_only,
-        };
 
-        // Emit search event with data directly from prop
-        this.$emit('search', searchPayload);
-      },
+      // Emit search event with data directly from prop
+      this.$emit('search', searchPayload);
     },
-  };
-  </script>
+  },
+};
+</script>
+
   
-  <style scoped>
+<style scoped>
 /* Button styles remain unchanged */
 button {
   display: block;
@@ -123,7 +131,7 @@ button {
   border: none;
   border-radius: 2px;
   cursor: pointer;
-  width: 100%;
+  width: 200px;
   font-weight: 700;
 }
 
@@ -139,230 +147,103 @@ button:hover {
   background-color: #f4f1eb;
 }
 
-/* Slider container styles */
-.slider-container {
-  margin: 0; /* Remove excess margins */
-  display: flex;
-  align-items: center; /* Center the slider vertically */
-  justify-content: center; /* Center the slider horizontally */
-  padding: 0 0 20px 0; /* Add some padding to give space around the slider */
-}
-
-/* Slider container styles */
-.slider-container {
-  margin: 0;
+/* Switch Container */
+.switch-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 0 20px 0;
+  margin-bottom: 1rem;
+  /* Ensure the container doesn't shift */
+  width: 100%;
 }
 
-/* Slider styles */
-.slider {
+/* Switch (Toggle) */
+.switch {
   position: relative;
   display: inline-block;
-  width: 100%;
-  height: 60px;
-  cursor: pointer;
-  transition: background-color 0.4s;
-  margin-bottom: 1rem;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0; /* Prevent the switch from shrinking */
 }
 
-/* Hide default input */
-.slider input {
+/* Hide default checkbox */
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* First pseudo-element for the initial gradient */
-.slider-round::before {
-  content: '';
+/* Slider */
+.slider {
   position: absolute;
+  cursor: pointer;
+  background-color: white;
+  border-radius: 28px;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 40px;
-  background: radial-gradient(circle at 6% 50%, rgb(0, 0, 0) 25px, white 26px);
-  transition: opacity .4s;
-  opacity: 1; /* Fully visible by default */
-  z-index: 1;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
 }
 
-/* Second pseudo-element for the final gradient */
-.slider-round::after {
-  content: '';
+.slider:before {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 40px;
-  background: radial-gradient(circle at 94% 50%, black 25px, rgb(48, 48, 48) 26px);
-  transition: opacity .4s;
-  opacity: 0; /* Hidden by default */
-  z-index: 1;
+  content: '';
+  height: 24px;
+  width: 24px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #004aad;
+  border-radius: 50%;
+  transition: 0.4s;
 }
 
-/* Checked styles: fade out the first gradient and fade in the second */
-.slider input:checked + .slider-round::before {
-  opacity: 0;
+input:checked + .slider {
+  background-color: white;
 }
 
-.slider input:checked + .slider-round::after {
-  opacity: 1;
+input:checked + .slider:before {
+  transform: translateX(24px);
 }
 
-/* Text color transition */
-.slider input:checked + .slider-round {
-  color: white;
-  transition: color 0.2s;
+.slider.round {
+  border-radius: 28px;
 }
 
-/* Slider text */
-.slider-text {
-  font-size: 1rem;
-  transition: color 0.2s;
-  line-height: 1;
-  z-index: 2;
+.slider.round:before {
+  border-radius: 50%;
 }
 
-/* remove slider text extra  when screen is less than 640px */
+/* Toggle Text */
+.toggle-text {
+  margin-left: 1rem;
+  display: flex;
+}
+
+/* Main text styling */
+.main-text {
+  font-weight: bold;
+  /* Set a fixed width to prevent shifting */
+  min-width: 80px;
+  /* Keep the text on one line */
+  white-space: nowrap;
+  font-size: 1.2rem;
+}
+
+/* Additional text styling */
+.slider-text-extra {
+  font-weight:bold;
+  /* Adjust to prevent shifting */
+  min-width: 250px;
+  /* Keep the text on one line */
+  white-space: nowrap;
+  font-size: 1.2rem;
+}
+
+/* Responsive adjustments for extra text */
 @media (max-width: 1024px) {
   .slider-text-extra {
     display: none;
   }
 }
-/* Keyframe animation to slide the gradient */
-@keyframes slide-gradient {
-  0% {
-    background: radial-gradient(circle at 6% 50%, black 25px, white 26px);
-  }
-  7% {
-    background: radial-gradient(circle at 12% 50%, black 25px, white 26px);
-  }
-  14% {
-    background: radial-gradient(circle at 18% 50%, black 25px, white 26px);
-  }
-  21% {
-    background: radial-gradient(circle at 24% 50%, black 25px, white 26px);
-  }
-  28% {
-    background: radial-gradient(circle at 30% 50%, black 25px, white 26px);
-  }
-  35% {
-    background: radial-gradient(circle at 36% 50%, black 25px, white 26px);
-  }
-  42% {
-    background: radial-gradient(circle at 42% 50%, black 25px, white 26px);
-  }
-  50% {
-    background: radial-gradient(circle at 50% 50%, black 25px, white 26px);
-  }
-  57% {
-    background: radial-gradient(circle at 58% 50%, black 25px, white 26px);
-  }
-  64% {
-    background: radial-gradient(circle at 64% 50%, black 25px, white 26px);
-  }
-  71% {
-    background: radial-gradient(circle at 70% 50%, black 25px, white 26px);
-  }
-  78% {
-    background: radial-gradient(circle at 76% 50%, black 25px, white 26px);
-  }
-  85% {
-    background: radial-gradient(circle at 82% 50%, black 25px, white 26px);
-  }
-  92% {
-    background: radial-gradient(circle at 88% 50%, black 25px, white 26px);
-  }
-  100% {
-    background: radial-gradient(circle at 94% 50%, black 25px, white 26px);
-  }
-}
-
-@keyframes slide-gradient-reverse {
-  0% {
-    background: radial-gradient(circle at 94% 50%, black 25px, white 26px);
-  }
-  7% {
-    background: radial-gradient(circle at 88% 50%, black 25px, white 26px);
-  }
-  14% {
-    background: radial-gradient(circle at 82% 50%, black 25px, white 26px);
-  }
-  21% {
-    background: radial-gradient(circle at 76% 50%, black 25px, white 26px);
-  }
-  28% {
-    background: radial-gradient(circle at 70% 50%, black 25px, white 26px);
-  }
-  35% {
-    background: radial-gradient(circle at 64% 50%, black 25px, white 26px);
-  }
-  42% {
-    background: radial-gradient(circle at 58% 50%, black 25px, white 26px);
-  }
-  50% {
-    background: radial-gradient(circle at 50% 50%, black 25px, white 26px);
-  }
-  57% {
-    background: radial-gradient(circle at 42% 50%, black 25px, white 26px);
-  }
-  64% {
-    background: radial-gradient(circle at 36% 50%, black 25px, white 26px);
-  }
-  71% {
-    background: radial-gradient(circle at 30% 50%, black 25px, white 26px);
-  }
-  78% {
-    background: radial-gradient(circle at 24% 50%, black 25px, white 26px);
-  }
-  85% {
-    background: radial-gradient(circle at 18% 50%, black 25px, white 26px);
-  }
-  92% {
-    background: radial-gradient(circle at 12% 50%, black 25px, white 26px);
-  }
-  100% {
-    background: radial-gradient(circle at 6% 50%, black 25px, white 26px);
-  }
-}
-
-
-
-/* Slider round styles */
-.slider-round {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 40px;
-  font-weight: 600;
-  color: black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 6% 50%, black 25px, white 26px); /* Initial background */
-  overflow: hidden;
-  transition: color 0.2s;
-}
-
-/* Trigger the sliding animation when the checkbox is checked */
-.slider input:checked + .slider-round {
-  animation: slide-gradient 0.4s forwards;
-  color: white; /* Change text color */
-}
-
-/* Apply the reverse animation when the checkbox is unchecked */
-.slider input:not(:checked) + .slider-round {
-  animation: slide-gradient-reverse 0.4s forwards;
-  color: black;
-}
-
-
-/* Add any additional custom styling */
-
-
 </style>
+

@@ -1,16 +1,15 @@
 <template>
-    <div class="advanced-search flex-col items-center justify-center pt-6 w-full">
+    <div class="advanced-search flex-col items-center pt-6 pr-10 w-full">
         <div class="search-interface" >
       <h2 class="text-2xl font-semibold mb-4">Advanced Search Limiters</h2>
-      <p class="text-justify text-gray-600">Add fields to refine your vector search by filtering the grants based on 
-        specific keywords or eligibility criteria.</p>
+      <p class="text-justify text-gray-600">Add fields to filter the grants based on specific keywords or eligibility criteria.</p>
       </div>
       
       <div v-for="(search, index) in fields" :key="index" class="search-row flex items-center w-full">
 
         <div class="flex items-center space-x-4 w-full">
                 <!-- Remove Button -->
-        <button @click="removeField(index)" class="text-white hover:text-red-700 transition w-auto border rounded px-4 p-2 bg-black font-black">
+        <button @click="removeField(index)" class="bg-transparent text-black border border-black border-2 rounded-md hover:bg-gray-800 hover:text-white px-4 p-2 font-black">
           X
         </button>
         <!-- Select for Field Name -->
@@ -55,9 +54,9 @@
       <button 
         v-if="fields.length < 10" 
         @click="addField" 
-        class="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+        class="px-3 py-2 bg-transparent text-black border border-black border-2 rounded-md hover:bg-gray-800 hover:text-white"
       >
-        + Add Limiter
+        +Add Limiter&nbsp;
       </button>
     </div>
     </div>

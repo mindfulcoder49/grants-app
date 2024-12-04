@@ -19,7 +19,7 @@ export default {
   methods: {
     adjustHeight() {
       // Reset height to auto, then set height based on scrollHeight
-      this.$refs.inputField.style.height = "auto";
+      this.$refs.inputField.style.height = "5rem";
       this.$refs.inputField.style.height = `${this.$refs.inputField.scrollHeight}px`;
     },
   },
@@ -29,14 +29,14 @@ export default {
 <style scoped>
 textarea {
   display: flex;
-  width: 100%;
+  width: 70%;
   padding: 0.5rem;
-  margin: 0.5rem 0;
-  font-size: 1.5rem;
-  border-radius: 10px;
+  margin: 0.5rem auto;
+  font-size: 2rem;
+  border-radius: 50px;
   border: 1px solid #c000;
   text-align: center;
-  justify-content: center ;
+  justify-content: center;
   color: #111;
   display: block;
   resize: none; /* Disable manual resizing */
@@ -44,6 +44,7 @@ textarea {
   line-height: 1.5cap;
   padding: 10px; /* Adjust as necessary */
   line-height: 1.5; /* Adjust the line height */
+  height: 5rem;
 }
 
 textarea:focus {
@@ -54,7 +55,17 @@ textarea:focus {
 textarea::placeholder {
   color: #50473e;
   font-style: italic;
-  padding-top: 1rem;
+  padding-top: .1rem;
   font-weight: 600;
+  font-size: 2rem;
+}
+
+/* add styles for mobile responsiveness */
+@media (max-width: 640px) {
+  textarea {
+    font-size: 1rem;
+    margin: 0.25rem 0;
+    width: 100%;
+  }
 }
 </style>
