@@ -4,6 +4,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import axios from 'axios';
 
 defineProps({
     mustVerifyEmail: {
@@ -20,6 +22,27 @@ const form = useForm({
     name: user.name,
     email: user.email,
 });
+
+const alertSettings = ref(user.alerts_setting || { frequency: 'weekly' });
+const alertFrequency = computed({
+    get: () => alertSettings.value?.frequency || 'weekly',
+    set: (value) => { alertSettings.value.frequency = value; },
+});
+const companyDescription = ref(user.company_description || '');
+const statusMessage = ref('');
+
+const updateAlertSettings = async () => {
+    try {
+        const response = await axios.post('/profile/settings', {
+            company_description: companyDescription.value,
+            alerts_setting: alertSettings.value,
+        });
+        statusMessage.value = 'Settings updated successfully.';
+    } catch (error) {
+        statusMessage.value = 'Failed to update settings. Please try again.';
+        console.error(error);
+    }
+};
 </script>
 
 <template>
@@ -98,5 +121,54 @@ const form = useForm({
                 </Transition>
             </div>
         </form>
+
+        <!-- Saved Search and Alert Settings Section -->
+        <section class="mt-10">
+            <header>
+                <h2 class="text-lg font-medium text-gray-900">Saved Search Alerts</h2>
+
+                <p class="mt-1 text-sm text-gray-600">
+                    Configure your saved search alerts and update frequency.
+                </p>
+            </header>
+
+            <div class="mt-6 space-y-6">
+                <div>
+                    <InputLabel for="company-description" value="Company Description" />
+
+                    <textarea
+                        id="company-description"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        v-model="companyDescription"
+                        rows="3"
+                    ></textarea>
+
+                    <InputError class="mt-2" :message="form.errors.company_description" />
+                </div>
+
+                <div>
+                    <InputLabel for="alert-frequency" value="Alert Frequency" />
+
+                    <select
+                        id="alert-frequency"
+                        v-model="alertFrequency"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+
+                    <InputError class="mt-2" :message="form.errors.frequency" />
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <PrimaryButton @click="updateAlertSettings">Update Alerts</PrimaryButton>
+
+                    <p v-if="statusMessage" :class="['text-sm', statusMessage === 'Settings updated successfully.' ? 'text-green-600' : 'text-red-600']">
+                        {{ statusMessage }}
+                    </p>
+                </div>
+            </div>
+        </section>
     </section>
 </template>

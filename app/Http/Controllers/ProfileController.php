@@ -60,4 +60,24 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'company_description' => ['nullable', 'string'],
+            'alerts_setting' => ['nullable', 'array'],
+        ]);
+
+        $user = $request->user();
+
+        $user->company_description = $request->input('company_description');
+        $user->alerts_setting = $request->input('alerts_setting');
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Settings updated successfully.',
+            'user' => $user,
+        ]);
+    }
 }

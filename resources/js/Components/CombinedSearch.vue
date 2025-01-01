@@ -118,12 +118,20 @@
       <div class="w-full flex flex-col items-center">
         <button class="searchButton" @click="searchGrants">{{ buttonText }}</button>
       </div>
+
+      <AlertSettings :companyDescription="companyDescription" />
+
     </div>
   </template>
   
   <script>
+  import AlertSettings from './AlertSettings.vue';
+
   export default {
     name: 'CombinedSearch',
+    components: {
+      AlertSettings,
+    },
     emits: ['search'], // Emit search event to parent
     props: {
       buttonText: {
