@@ -18,7 +18,12 @@ Here are the latest grants matching your saved search criteria:
 @endforeach
 ---
 
-Link to all results: [View All Results](https://www.grants.gov/?grants={{ foreach($grants as $grant) echo $grant['opportunity_id'] . ',' }})
+@php
+$grantIds = implode(',', array_column($grants, 'opportunity_id'));
+@endphp
+
+Link to all results: [View All Results](https://www.grants.gov/?grants={{ $grantIds }})
+
 
 @else
 No grants were found matching your criteria this time. Keep an eye out for more opportunities in the future!
