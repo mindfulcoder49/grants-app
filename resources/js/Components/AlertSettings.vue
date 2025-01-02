@@ -2,21 +2,21 @@
   <div class="container w-full sm:w-[70%] mx-auto ">
     <div v-if="!user" class="alert-settings text-center">
       <!-- Not Logged In -->
-      <p class="description text-lg text-gray-700">
+      <p class="description text-lg text-black">
         Please <a href="/login" class="text-blue-600 underline">log in</a> to save your search and receive results directly to your email.
       </p>
     </div>
 
     <div v-else-if="!alerts_setting && !localCompanyDescription" class="alert-settings">
       <!-- No Alerts Configured -->
-      <p class="description text-lg text-gray-700 mb-4">
+      <p class="description text-lg text-black mb-4">
         Save your search and configure email alerts by selecting your preferences below.
       </p>
 
       <div class="alert-controls flex flex-col sm:flex-row gap-4 items-start">
         <!-- Dropdown for Update Frequency -->
         <div class="w-auto">
-          <label for="update-frequency" class="label block text-gray-700 font-bold mb-2">Select Frequency:</label>
+          <label for="update-frequency" class="label block text-black font-bold mb-2">Select Frequency:</label>
           <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             <option value="disabled">Disabled</option>
             <option value="daily">Daily</option>
@@ -37,13 +37,13 @@
 
     <div v-else class="alert-settings">
       <!-- Alerts Configured -->
-      <p class="description text-lg text-gray-700 mb-4">
+      <p class="description text-lg text-black mb-4">
         Your current search alert settings:
       </p>
 
       <div class="flex flex-col sm:flex-row gap-4 items-start">
         <div class="w-auto">
-          <label for="update-frequency" class="label block text-gray-700 font-bold mb-2">Update Frequency:</label>
+          <label for="update-frequency" class="label block text-black font-bold mb-2">Update Frequency:</label>
           <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             <option value="disabled">Disabled</option>
             <option value="daily">Daily</option>
@@ -52,7 +52,7 @@
         </div>
 
         <div class="flex-1 w-full">
-          <label for="company-description" class="label block text-gray-700 font-bold mb-2">Company Description:</label>
+          <label for="company-description" class="label block text-black font-bold mb-2">Company Description:</label>
           <textarea
             id="company-description"
             v-model="localCompanyDescription"
@@ -62,11 +62,11 @@
         </div>
       </div>
 
-      <button @click="enableAlerts" class="enable-alerts-btn mt-4 bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700">Update Search Alerts</button>
+      <button @click="enableAlerts" class="enable-alerts-btn mt-4 border-2 border-black text-black px-4 py-2 rounded-md hover:bg-blue-700 hover:text-white">Update Search Alerts</button>
     </div>
 
     <!-- Status Message -->
-    <p v-if="statusMessage" :class="['status-message mt-4 text-center', isError ? 'text-red-600' : 'text-green-600']">{{ statusMessage }}</p>
+    <p v-if="statusMessage" :class="['status-message mt-4 text-center', isError ? 'text-red-600' : 'text-blue-700']">{{ statusMessage }}</p>
   </div>
 </template>
 
