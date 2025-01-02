@@ -1,63 +1,73 @@
 <template>
-    <div>
-      <div v-if="!user" class="alert-settings">
-        <!-- Not Logged In -->
-        <p class="description">
-          Please <a href="/login" class="text-blue-600 underline">log in</a> to save your search and receive results directly to your email.
-        </p>
-      </div>
-      <div v-else-if="!alerts_setting && !localCompanyDescription" class="alert-settings">
-        <!-- No Alerts Configured -->
-        <p class="description">
-          Save your search and configure email alerts by selecting your preferences below.
-        </p>
-        <div class="alert-controls">
-          <!-- Dropdown for Update Frequency -->
-          <label for="update-frequency" class="label">Select Frequency:</label>
-          <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency">
+  <div class="container w-full sm:w-[70%] mx-auto ">
+    <div v-if="!user" class="alert-settings text-center">
+      <!-- Not Logged In -->
+      <p class="description text-lg text-gray-700">
+        Please <a href="/login" class="text-blue-600 underline">log in</a> to save your search and receive results directly to your email.
+      </p>
+    </div>
+
+    <div v-else-if="!alerts_setting && !localCompanyDescription" class="alert-settings">
+      <!-- No Alerts Configured -->
+      <p class="description text-lg text-gray-700 mb-4">
+        Save your search and configure email alerts by selecting your preferences below.
+      </p>
+
+      <div class="alert-controls flex flex-col sm:flex-row gap-4 items-start">
+        <!-- Dropdown for Update Frequency -->
+        <div class="w-auto">
+          <label for="update-frequency" class="label block text-gray-700 font-bold mb-2">Select Frequency:</label>
+          <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             <option value="disabled">Disabled</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
           </select>
         </div>
+
         <textarea
           v-model="localCompanyDescription"
           placeholder="Describe your company..."
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          class="textarea w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
           rows="3"
         ></textarea>
-        <!-- Enable Alerts Button -->
-        <button @click="enableAlerts" class="enable-alerts-btn">Enable Search Alerts</button>
       </div>
-      <div v-else  class="alert-settings">
-        <!-- Alerts Configured -->
-        <p class="description">
-          Your current search alert settings:
-        </p>
-        <div>
-          <strong>Frequency:</strong> {{ alerts_setting.frequency }}
-        </div>
-        <div>
-          <strong>Company Description:</strong>
-          <textarea
-            v-model="localCompanyDescription"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            rows="3"
-          ></textarea>
-        </div>
-        <div class="alert-controls">
-          <label for="update-frequency" class="label">Update Frequency:</label>
-          <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency">
+
+      <button @click="enableAlerts" class="enable-alerts-btn mt-4 bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700">Enable Search Alerts</button>
+    </div>
+
+    <div v-else class="alert-settings">
+      <!-- Alerts Configured -->
+      <p class="description text-lg text-gray-700 mb-4">
+        Your current search alert settings:
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 items-start">
+        <div class="w-auto">
+          <label for="update-frequency" class="label block text-gray-700 font-bold mb-2">Update Frequency:</label>
+          <select id="update-frequency" v-model="localUpdateFrequency" class="update-frequency w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             <option value="disabled">Disabled</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
           </select>
         </div>
-        <button @click="enableAlerts" class="enable-alerts-btn">Update Search Alerts</button>
+
+        <div class="flex-1 w-full">
+          <label for="company-description" class="label block text-gray-700 font-bold mb-2">Company Description:</label>
+          <textarea
+            id="company-description"
+            v-model="localCompanyDescription"
+            class="textarea w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            rows="2"
+          ></textarea>
+        </div>
       </div>
-      <!-- Status Message -->
-      <p v-if="statusMessage" :class="['status-message', { error: isError }]">{{ statusMessage }}</p>
+
+      <button @click="enableAlerts" class="enable-alerts-btn mt-4 bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700">Update Search Alerts</button>
     </div>
+
+    <!-- Status Message -->
+    <p v-if="statusMessage" :class="['status-message mt-4 text-center', isError ? 'text-red-600' : 'text-green-600']">{{ statusMessage }}</p>
+  </div>
 </template>
 
 <script>
@@ -107,56 +117,6 @@ export default {
 };
 </script>
 
-<style scoped>
-.alert-controls {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.alert-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-}
-
-.description {
-  font-size: 1rem;
-  color: #555;
-}
-
-.label {
-  font-weight: bold;
-}
-
-.update-frequency {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding-right: 2rem;
-}
-
-.enable-alerts-btn {
-  padding: 0.4rem 0.75rem;
-  color: black;
-  border: 2px solid black;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.enable-alerts-btn:hover {
-  background-color: #0056b3;
-  color: white;
-}
-
-.status-message {
-  font-size: 0.9rem;
-  color: #28a745; /* Success: Green */
-}
-
-.status-message.error {
-  color: #dc3545; /* Error: Red */
-}
+<style>
+/* Tailwind CSS is used for styling */
 </style>

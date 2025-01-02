@@ -421,6 +421,8 @@ export default {
 }
 
 .pagination button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+  color: white; /* White text on hover */
 }
 
 /* Results list styling */
