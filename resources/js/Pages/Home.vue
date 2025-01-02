@@ -134,7 +134,7 @@
       </button>
 
       <div v-show="currentPage === 'home'">
-        <HomeSection :searchTerm="searchTerm" />
+        <HomeSection :searchTerm="searchTerm" :permaGrants="grants" />
       </div>
       <div v-show="currentPage === 'about'">
         <About />
@@ -238,6 +238,12 @@ export default {
       if (!confirm('Navigating to Login/Register will clear your search and AI Chat. Continue?')) {
         event.preventDefault();
       }
+    }
+  },
+  props: {
+    grants: {
+      type: Array,
+      default: () => []
     }
   },
   computed: {

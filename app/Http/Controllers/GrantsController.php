@@ -211,7 +211,7 @@ class GrantsController extends Controller
     /**
      * Embed the given text into a vector.
      */
-    private function embedText($text)
+    public function embedText($text)
     {
         // Embedding the search term into a vector
         Log::info('Embedding text into a vector.');

@@ -17,7 +17,7 @@
 
 
   <!-- Conditionally render content only after a search is performed -->
-  <div v-if="searchPerformed">
+  <div v-if="searchPerformed || grants ">
     <!-- Tabs for selecting which search result to display
     <div class="tabs">
       <span v-if="loadingVectorSearch" class="loading-spinner"></span>
@@ -232,10 +232,10 @@ export default {
       searchPerformed: false,
       govgrants: [],  // Store all the loaded government grant data here
       selectedGrants: [],  // Store selected grants here
+      grants: this.permaGrants,  // Store all the loaded grant data here
       buttonText: 'SEARCH GRANTS.GOV',
       activeTab: 'vectorSearch', // Default to GovGrants tab being active
-      loadingVectorSearch: true, // Track if the vector search is loading
-      grants: [],
+      loadingVectorSearch: false, // Track if the vector search is loading
       showFilters: false,
       filters: {
         anyField: '',
@@ -307,6 +307,10 @@ export default {
     searchTerm: {
       type: String,
       default: '',
+    },
+    permaGrants: {
+      type: Array,
+      default: () => [],
     },
   },
   computed: {
@@ -398,7 +402,7 @@ export default {
   async performSearch(searchPayload) {
     this.searchPerformed = true;
     this.loadingVectorSearch = true;
-    this.grants = [];
+    //this.grants = []; // Clear existing grants
 
     // Proceed with the searchPayload directly
     try {

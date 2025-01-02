@@ -43,6 +43,12 @@ export default {
       collapsed: {}
     };
   },
+  props: {
+    grantIDs: {
+      type: Array,
+      default: () => []
+    }
+  },
   computed: {
     user () {
       return this.$page.props.auth.user;
