@@ -17,7 +17,7 @@
 
 
   <!-- Conditionally render content only after a search is performed -->
-  <div v-if="searchPerformed || grants ">
+  <div v-if="searchPerformed || grants.length > 0">
     <!-- Tabs for selecting which search result to display
     <div class="tabs">
       <span v-if="loadingVectorSearch" class="loading-spinner"></span>
