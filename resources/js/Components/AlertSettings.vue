@@ -63,6 +63,7 @@
       </div>
 
       <button @click="enableAlerts" class="enable-alerts-btn mt-4 border-2 border-black text-black px-4 py-2 rounded-md hover:bg-blue-700 hover:text-white">Update Search Alerts</button>
+      <button @click="testAlert" class="test-alert-btn mt-4 ml-4 border-2 border-black text-black px-4 py-2 rounded-md hover:bg-blue-700 hover:text-white">Save & Test Alert</button>
     </div>
 
     <!-- Status Message -->
@@ -103,6 +104,26 @@ export default {
         console.error("Error:", error);
       }
     };
+    //save the alert settings and if that succeeds send a second call to dispatch a test alert
+    const testAlert = async () => {
+      try {
+        const response = await axios.post("/profile/settings", {
+          company_description: localCompanyDescription.value,
+          alerts_setting: { frequency: localUpdateFrequency.value },
+        });
+        statusMessage.value = "Search alerts updated successfully!";
+        isError.value = false;
+        console.log("Response:", response.data);
+        //send a test alert
+        const testResponse = await axios.post("/dispatch-saved-alerts");
+        console.log("Test Response:", testResponse.data);
+        statusMessage.value += " Test alert sent successfully!";
+      } catch (error) {
+        statusMessage.value = "Failed to update search alerts. Please try again.";
+        isError.value = true;
+        console.error("Error:", error);
+      }
+    };
 
     return {
       user,
@@ -112,6 +133,7 @@ export default {
       statusMessage,
       isError,
       enableAlerts,
+      testAlert,
     };
   },
 };

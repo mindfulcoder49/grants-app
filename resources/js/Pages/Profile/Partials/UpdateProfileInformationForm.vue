@@ -30,6 +30,7 @@ const alertFrequency = computed({
 });
 const companyDescription = ref(user.company_description || '');
 const statusMessage = ref('');
+const isError = ref(false);
 
 const updateAlertSettings = async () => {
     try {
@@ -38,8 +39,23 @@ const updateAlertSettings = async () => {
             alerts_setting: alertSettings.value,
         });
         statusMessage.value = 'Settings updated successfully.';
+        isError.value = false;
     } catch (error) {
         statusMessage.value = 'Failed to update settings. Please try again.';
+        isError.value = true;
+        console.error(error);
+    }
+};
+
+const saveAndTestAlert = async () => {
+    try {
+        await updateAlertSettings();
+        const response = await axios.post('/dispatch-saved-alerts');
+        statusMessage.value += ' Test alert sent successfully!';
+        console.log('Test Response:', response.data);
+    } catch (error) {
+        statusMessage.value = 'Failed to send test alert. Please try again.';
+        isError.value = true;
         console.error(error);
     }
 };
@@ -49,7 +65,6 @@ const updateAlertSettings = async () => {
     <section>
         <header>
             <h2 class="text-lg font-medium text-gray-900">Profile Information</h2>
-
             <p class="mt-1 text-sm text-gray-600">
                 Update your account's profile information and email address.
             </p>
@@ -58,7 +73,6 @@ const updateAlertSettings = async () => {
         <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
             <div>
                 <InputLabel for="name" value="Name" />
-
                 <TextInput
                     id="name"
                     type="text"
@@ -68,13 +82,11 @@ const updateAlertSettings = async () => {
                     autofocus
                     autocomplete="name"
                 />
-
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div>
                 <InputLabel for="email" value="Email" />
-
                 <TextInput
                     id="email"
                     type="email"
@@ -83,7 +95,6 @@ const updateAlertSettings = async () => {
                     required
                     autocomplete="username"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
@@ -99,7 +110,6 @@ const updateAlertSettings = async () => {
                         Click here to re-send the verification email.
                     </Link>
                 </p>
-
                 <div
                     v-show="status === 'verification-link-sent'"
                     class="mt-2 font-medium text-sm text-green-600"
@@ -110,7 +120,6 @@ const updateAlertSettings = async () => {
 
             <div class="flex items-center gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
-
                 <Transition
                     enter-active-class="transition ease-in-out"
                     enter-from-class="opacity-0"
@@ -126,7 +135,6 @@ const updateAlertSettings = async () => {
         <section class="mt-10">
             <header>
                 <h2 class="text-lg font-medium text-gray-900">Saved Search Alerts</h2>
-
                 <p class="mt-1 text-sm text-gray-600">
                     Configure your saved search alerts and update frequency.
                 </p>
@@ -135,40 +143,41 @@ const updateAlertSettings = async () => {
             <div class="mt-6 space-y-6">
                 <div>
                     <InputLabel for="company-description" value="Company Description" />
-
                     <textarea
                         id="company-description"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         v-model="companyDescription"
                         rows="3"
                     ></textarea>
-
                     <InputError class="mt-2" :message="form.errors.company_description" />
                 </div>
 
                 <div>
                     <InputLabel for="alert-frequency" value="Alert Frequency" />
-
                     <select
                         id="alert-frequency"
                         v-model="alertFrequency"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     >
                         <option value="disabled">Disabled</option>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                     </select>
-
                     <InputError class="mt-2" :message="form.errors.frequency" />
                 </div>
 
                 <div class="flex items-center gap-4">
                     <PrimaryButton @click="updateAlertSettings">Update Alerts</PrimaryButton>
-
-                    <p v-if="statusMessage" :class="['text-sm', statusMessage === 'Settings updated successfully.' ? 'text-green-600' : 'text-red-600']">
-                        {{ statusMessage }}
-                    </p>
+                    <PrimaryButton @click="saveAndTestAlert" class="bg-blue-600 hover:bg-blue-700 text-white">
+                        Save & Test Alert
+                    </PrimaryButton>
                 </div>
+                <p
+                    v-if="statusMessage"
+                    :class="['mt-4 text-sm text-center', isError ? 'text-red-600' : 'text-green-600']"
+                >
+                    {{ statusMessage }}
+                </p>
             </div>
         </section>
     </section>

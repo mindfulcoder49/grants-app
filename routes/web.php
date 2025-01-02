@@ -65,4 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.updateSettings');
 });
 
+Route::post('/dispatch-saved-alerts', [EmailController::class, 'dispatchSavedAlertsJob'])->middleware('auth');
+
+
 require __DIR__.'/auth.php';

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\SendSavedSearchEmail;
+use Illuminate\Support\Facades\Auth;
 
 class EmailController extends Controller
 {
@@ -70,6 +72,31 @@ class EmailController extends Controller
 
             // Optionally, return an error response to the frontend
             return redirect()->back()->with('error', 'An error occurred while submitting your feedback. Please try again.');
+        }
+    }
+
+    public function dispatchSavedAlertsJob()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return json_encode(['error' => 'User not found.']);
+            }
+
+            // Dispatch the job
+            SendSavedSearchEmail::dispatch($user);
+
+            Log::info('Dispatched SendSavedSearchEmail job for user', ['user_id' => $user->id]);
+
+            return json_encode(['success' => 'Saved alerts job dispatched successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Error dispatching saved alerts job', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+
+            return json_encode(['error' => 'An error occurred while dispatching the saved alerts job.']);
         }
     }
 }
