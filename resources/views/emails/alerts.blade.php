@@ -13,7 +13,7 @@ Here are the latest grants matching your saved search criteria:
 **Close Date**: {{ \Carbon\Carbon::parse($grant['close_date'])->format('M d, Y') ?? 'N/A' }}  
 **Description**: {{ \Illuminate\Support\Str::limit($grant['description'], 200) }}  
 
-[View Full Details](https://www.grants.gov/?grants={{ $grant['opportunity_id'] }})
+[View Full Details]({{ config('app.url') }}/?grants={{ $grant['opportunity_id'] }})
 
 @endforeach
 ---
@@ -22,8 +22,7 @@ Here are the latest grants matching your saved search criteria:
 $grantIds = implode(',', array_column($grants, 'opportunity_id'));
 @endphp
 
-Link to all results: [View All Results](https://www.grants.gov/?grants={{ $grantIds }})
-
+Link to all results: [View All Results]({{ config('app.url') }}/?grants={{ $grantIds }})
 
 @else
 No grants were found matching your criteria this time. Keep an eye out for more opportunities in the future!
