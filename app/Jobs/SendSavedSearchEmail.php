@@ -64,6 +64,7 @@ class SendSavedSearchEmail implements ShouldQueue
             // Convert results to array
             $grants = $results->values()->toArray();
 
+            Log::info("Found grants: " . json_encode($grants));
             // Send email
             Mail::to($this->user->email)->send(new SendAlertEmail($this->user, $grants));
 
