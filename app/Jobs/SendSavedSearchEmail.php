@@ -47,10 +47,10 @@ class SendSavedSearchEmail implements ShouldQueue
             // Perform the search
             $results = $grantsController->performSearch(
                 $embedding,
-                'vector',                // Default search type
+                'centroid',                // Default search type
                 5,                       // Top 5 results
                 'cosine',                // Similarity metric
-                5,                       // Top centroids
+                200,                       // Top centroids
                 1,                       // Refine percentage
                 -1,                      // Single centroid (optional)
                 [['scope' => 'open']]    // Default scope
