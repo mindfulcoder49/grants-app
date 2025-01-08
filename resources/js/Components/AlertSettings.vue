@@ -1,8 +1,8 @@
 <template>
-  <div class="container w-full sm:w-[70%] mx-auto ">
-    <div v-if="!user" class="alert-settings text-center">
+  <div class="container mx-auto">
+    <div v-if="!user" class="alert-settings">
       <!-- Not Logged In -->
-      <p class="description text-lg text-black">
+      <p class="description text-md text-black">
         Please <a href="/login" class="text-blue-600 underline">log in</a> to save your search and receive results directly to your email.
       </p>
     </div>

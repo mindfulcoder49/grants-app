@@ -60,6 +60,9 @@
           Historical grant search is limited to the past two years. If you need more, let us know with
           the Help Us Improve button.
         </div>
+        <div class="flex mt-10">
+          <AlertSettings :companyDescription="companyDescription" />
+        </div>
       </div>
     </div>
       <div
@@ -119,7 +122,7 @@
         <button class="searchButton" @click="searchGrants">{{ buttonText }}</button>
       </div>
 
-      <AlertSettings :companyDescription="companyDescription" />
+      
 
     </div>
   </template>
