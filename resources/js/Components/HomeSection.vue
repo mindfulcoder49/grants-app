@@ -402,7 +402,7 @@ export default {
   async performSearch(searchPayload) {
     this.searchPerformed = true;
     this.loadingVectorSearch = true;
-    //this.grants = []; // Clear existing grants
+    this.grants = []; // Clear existing grants
 
     // Proceed with the searchPayload directly
     try {
